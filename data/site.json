@@ -1,13 +1,12 @@
 {
   "name": "Kenton Guarian",
-  "role": "Data · software · signal research",
-  "birthday": "25 today",
+  "role": "Data analyst and software developer",
   "nav": [
-    { "label": "Kenton", "href": "/kenton/" },
-    { "label": "Code", "href": "/code/" },
+    { "label": "About", "href": "/kenton/" },
+    { "label": "Work", "href": "/code/" },
     { "label": "Links", "href": "/links/" },
-    { "label": "More", "href": "/more/" },
-    { "label": "Contact", "href": "/contact/", "accent": true }
+    { "label": "Notes", "href": "/more/" },
+    { "label": "Contact", "href": "/contact/" }
   ],
-  "footerNote": "San Diego built. Signal minded. Still curious."
+  "footerNote": "Kenton Guarian · San Diego, California"
 }
