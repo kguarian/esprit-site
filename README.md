@@ -2,6 +2,16 @@
 
 The repository root is the deployable GitHub Pages site. It is intentionally build-free: every route is a folder with an `index.html`, so `/kenton/` and the other paths work directly on Pages.
 
+## GitHub Pages configuration
+
+In **Settings → Pages → Build and deployment**, select:
+
+- Source: **Deploy from a branch**
+- Branch: **main**
+- Folder: **/(root)**
+
+Do not select `/docs`; this repository intentionally has no `docs/` deployment folder. The `.nojekyll` marker tells Pages to serve the root as static files without Jekyll processing.
+
 ## Site map
 
 - `/` — birthday-themed landing page
