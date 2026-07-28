@@ -1,0 +1,14 @@
+{
+  "name": "Kenton",
+  "role": "Data analyst / curious human",
+  "birthday": "25 today",
+  "nav": [
+    { "label": "Kenton", "href": "/kenton/" },
+    { "label": "Code", "href": "/code/" },
+    { "label": "Links", "href": "/links/" },
+    { "label": "Contact", "href": "/contact/" },
+    { "label": "More", "href": "/more/" },
+    { "label": "Avery", "href": "/avery/", "accent": true }
+  ],
+  "footerNote": "Built with questions, clean tables, and a suspicious amount of coffee."
+}

@@ -1,0 +1,10 @@
+# Local React dev workspace (not committed)
+.react-dev/
+
+# React/Vite artifacts
+node_modules/
+dist/
+.vite/
+
+# OS junk
+.DS_Store
