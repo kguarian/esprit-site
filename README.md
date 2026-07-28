@@ -20,7 +20,6 @@ Do not select `/docs`; this repository intentionally has no `docs/` deployment f
 - `/links/` — references and recommendations
 - `/contact/` — contact information
 - `/more/` — open-ended side quests
-- `/avery/` — a specific unresolved question
 
 ## Structure
 
