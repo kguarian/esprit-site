@@ -151,3 +151,201 @@ a:focus-visible, button:focus-visible { outline: 3px solid var(--coral); outline
   .footer-inner { display: block; }
   .footer-inner p + p { margin-top: 0.4rem; }
 }
+
+/* /avery/ — a deliberately over-designed five-letter question */
+.wymbt-page {
+  min-height: 100vh;
+  overflow: hidden;
+  background: #f1ff51;
+}
+
+.wymbt-page::before {
+  z-index: 0;
+  background:
+    linear-gradient(115deg, transparent 44%, rgba(255, 255, 255, 0.7) 44.2%, transparent 44.5%),
+    repeating-radial-gradient(circle at 50% 50%, transparent 0 38px, rgba(23, 23, 23, 0.08) 39px 40px);
+  background-size: auto, 100% 100%;
+}
+
+.wymbt {
+  position: relative;
+  isolation: isolate;
+  display: grid;
+  min-height: 100vh;
+  place-items: center;
+  overflow: hidden;
+}
+
+.wymbt-home {
+  position: fixed;
+  z-index: 5;
+  top: 1.25rem;
+  left: 1.25rem;
+  display: grid;
+  width: 3.8rem;
+  height: 3.8rem;
+  place-items: center;
+  border: 2px solid var(--ink);
+  border-radius: 50%;
+  background: #fff8ec;
+  font-size: 0.72rem;
+  font-weight: 900;
+  letter-spacing: -0.04em;
+  text-decoration: none;
+  transform: rotate(-8deg);
+  transition: transform 180ms ease, background 180ms ease;
+}
+
+.wymbt-home:hover { background: #ff796d; transform: rotate(8deg) scale(1.08); }
+
+.wymbt-stage {
+  position: relative;
+  z-index: 2;
+  width: min(96vw, 110rem);
+  text-align: center;
+}
+
+.wymbt-kicker {
+  margin: 0 0 clamp(1rem, 3vw, 2.5rem);
+  font-size: clamp(0.62rem, 1.2vw, 0.84rem);
+  font-weight: 900;
+  letter-spacing: 0.28em;
+  text-transform: uppercase;
+}
+
+.wymbt-title {
+  display: flex;
+  justify-content: center;
+  margin: 0;
+  color: var(--ink);
+  font-size: clamp(6.5rem, 25vw, 25rem);
+  font-weight: 1000;
+  letter-spacing: -0.18em;
+  line-height: 0.66;
+  text-transform: uppercase;
+}
+
+.wymbt-title span {
+  display: inline-block;
+  text-shadow: 0.035em 0.035em 0 #ff796d, -0.025em -0.025em 0 #fff8ec;
+  animation: wymbt-breathe 4.8s ease-in-out infinite;
+}
+
+.wymbt-title span:nth-child(2) { animation-delay: -3.8s; }
+.wymbt-title span:nth-child(3) { animation-delay: -2.8s; }
+.wymbt-title span:nth-child(4) { animation-delay: -1.8s; }
+.wymbt-title span:nth-child(5) { animation-delay: -0.8s; }
+
+.wymbt-expansion {
+  display: inline-block;
+  margin: clamp(1.8rem, 5vw, 4rem) 0 0;
+  padding: 0.55rem 0.9rem;
+  border: 2px solid var(--ink);
+  background: #fff8ec;
+  box-shadow: 5px 5px 0 var(--ink);
+  font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+  font-size: clamp(0.68rem, 1.6vw, 0.9rem);
+  font-weight: 800;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  transform: rotate(-1.5deg);
+}
+
+.wymbt-orbit {
+  position: absolute;
+  z-index: 1;
+  border: 2px solid var(--ink);
+  border-radius: 50%;
+  pointer-events: none;
+}
+
+.wymbt-orbit--one {
+  width: min(64vw, 54rem);
+  aspect-ratio: 1;
+  transform: rotate(24deg) scaleY(0.35);
+  animation: wymbt-orbit-one 13s linear infinite;
+}
+
+.wymbt-orbit--two {
+  width: min(83vw, 72rem);
+  aspect-ratio: 1;
+  border-color: #ff796d;
+  transform: rotate(-32deg) scaleY(0.25);
+  animation: wymbt-orbit-two 18s linear infinite reverse;
+}
+
+.wymbt-spark {
+  position: absolute;
+  z-index: 3;
+  font-size: clamp(2.5rem, 7vw, 7rem);
+  animation: wymbt-spin 11s linear infinite;
+}
+
+.wymbt-spark--one { top: 12%; right: 12%; color: #ff796d; }
+.wymbt-spark--two { bottom: 16%; left: 10%; font-size: clamp(1.8rem, 5vw, 5rem); animation-direction: reverse; }
+
+.wymbt-marquee {
+  position: absolute;
+  right: 0;
+  bottom: 4.6rem;
+  left: 0;
+  display: flex;
+  overflow: hidden;
+  border-block: 2px solid var(--ink);
+  background: #ff796d;
+  font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+  font-size: 0.8rem;
+  font-weight: 900;
+  letter-spacing: 0.18em;
+  line-height: 2.2rem;
+  white-space: nowrap;
+  transform: rotate(1deg) scale(1.02);
+}
+
+.wymbt-marquee div { min-width: max-content; animation: wymbt-marquee 14s linear infinite; }
+
+.wymbt-credit {
+  position: absolute;
+  z-index: 4;
+  right: 1.25rem;
+  bottom: 1rem;
+  left: 1.25rem;
+  display: flex;
+  justify-content: space-between;
+  gap: 1rem;
+  font-size: 0.58rem;
+  font-weight: 900;
+  letter-spacing: 0.15em;
+  text-transform: uppercase;
+}
+
+@keyframes wymbt-breathe {
+  0%, 100% { transform: translateY(0) rotate(0); }
+  50% { transform: translateY(-0.045em) rotate(1.5deg); }
+}
+
+@keyframes wymbt-orbit-one {
+  to { transform: rotate(384deg) scaleY(0.35); }
+}
+
+@keyframes wymbt-orbit-two {
+  to { transform: rotate(328deg) scaleY(0.25); }
+}
+
+@keyframes wymbt-spin { to { transform: rotate(1turn); } }
+@keyframes wymbt-marquee { to { transform: translateX(-100%); } }
+
+@media (max-width: 600px) {
+  .wymbt-title { font-size: clamp(5.2rem, 27vw, 10rem); }
+  .wymbt-kicker { max-width: 18rem; margin-inline: auto; line-height: 1.5; }
+  .wymbt-credit { align-items: end; }
+  .wymbt-credit span { max-width: 9rem; }
+  .wymbt-credit span:last-child { text-align: right; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .wymbt-title span,
+  .wymbt-orbit,
+  .wymbt-spark,
+  .wymbt-marquee div { animation: none; }
+}
