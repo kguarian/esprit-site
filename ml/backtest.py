@@ -9,17 +9,27 @@ def load_df():
     try:
         import yfinance as yf
         data={}
-        tickers={"spy":"SPY","nvda":"NVDA","tnx":"^TNX","dxy":"DX-Y.NYB","oil":"CL=F","gold":"GC=F","silver":"SI=F","reit":"VNQ","shv":"SHV"}
+        # go back to 70s: use ^GSPC for S&P (SPY only 1993+), max period
+        tickers={"spy":"^GSPC","nvda":"NVDA","tnx":"^TNX","dxy":"DX-Y.NYB","oil":"CL=F","gold":"GC=F","silver":"SI=F","reit":"VNQ","shv":"SHV"}
         for k,sym in tickers.items():
-            df=yf.download(sym, period="2y", progress=False, auto_adjust=True)
-            data[k]=df["Close"]
-        df=pd.concat(data, axis=1).dropna()
-        df.columns=list(data.keys())
+            df=yf.download(sym, period="max", progress=False, auto_adjust=True)
+            # yfinance returns MultiIndex (Price, Ticker) — extract Close
+            if isinstance(df.columns, pd.MultiIndex):
+                data[k]=df[("Close", sym)].rename(k)
+            else:
+                data[k]=df["Close"].squeeze().rename(k) if "Close" in df else df.squeeze().rename(k)
+        df=pd.concat(data, axis=1, sort=False)
+        # forward-fill limited early missing (gold/oil/reit/shv pre-2000) then drop still-missing rows, keep 70s via core features
         df["spy_200ma"]=df["spy"].rolling(200).mean()
         df["spy_vs_200"]=(df["spy"]-df["spy_200ma"])/df["spy_200ma"]
         df["yield_10y"]=df["tnx"]; df["yield_curve"]=df["tnx"]*0.15
-        df["gsr"]=df["gold"]/df["silver"]; df["m2_proxy"]=df["shv"].rolling(20).mean().pct_change()
-        return df.dropna()
+        # fill gaps for early era (pre-1999 NVDA, pre-2000 commodities): forward-fill then median
+        for c in ["nvda","oil","gold","silver","reit","shv"]:
+            df[c]=df[c].ffill().fillna(df[c].median() if df[c].notna().any() else 0)
+        df["gsr"]=(df["gold"]/df["silver"]).fillna(50)
+        df["m2_proxy"]=df["shv"].rolling(20).mean().pct_change().fillna(0)
+        df=df.dropna(subset=["spy","spy_vs_200","yield_10y","dxy"])
+        return df
     except Exception as e:
         print("fetch fail",e)
         return None
