@@ -28,6 +28,32 @@ function Layout({ title, children }) {
   )
 }
 
+function OneOverF() {
+  const [exp, setExp] = React.useState(1.4)
+  const [amp, setAmp] = React.useState(1)
+  const peaks = [{f:8, w:1.5, h:1.8}, {f:22, w:2, h:0.9}]
+  return (
+    <div style={{ height:320, position:'relative', background:'#020617', overflow:'hidden' }}>
+      <svg viewBox="0 0 400 200" style={{ width:'100%', height:'100%', display:'block' }}>
+        <rect width={400} height={200} fill="#020617" />
+        <text x={12} y={18} fill="#22d3ee" fontSize={8} className="mono">PSD(f) = A / f^χ · x·y + Σ peaks</text>
+        <text x={12} y={192} fill="#64748b" fontSize={6} className="mono">f (Hz) log — 1 ─── 10 ─── 100</text>
+        {/* 1/f aperiodic */}
+        <path d={`M ${Array.from({length:80}, (_,i)=>{ const f=1+ (99*i/79); const x=30+ Math.log10(f)/2*340; const y=170 - (60*amp / Math.pow(f,exp) * 40) - (peaks.reduce((s,p)=> s + p.h*Math.exp(-Math.pow(Math.log10(f)-Math.log10(p.f),2)/(2*Math.pow(p.w/10,2))),0)*30); return `${i===0?'M':'L'} ${x.toFixed(1)} ${y.toFixed(1)}`}).join(' ')}`} fill="none" stroke="#f472b6" strokeWidth={1.6} opacity={0.95} />
+        <path d={`M ${Array.from({length:80}, (_,i)=>{ const f=1+ (99*i/79); const x=30+ Math.log10(f)/2*340; const y=170 - (60*amp / Math.pow(f,exp) * 40); return `${i===0?'M':'L'} ${x.toFixed(1)} ${y.toFixed(1)}`}).join(' ')}`} fill="none" stroke="#22d3ee" strokeWidth={1} opacity={0.35} strokeDasharray="4 4" />
+        {peaks.map((p,i)=>{ const x=30+ Math.log10(p.f)/2*340; return <g key={i}><line x1={x} y1={40} x2={x} y2={170} stroke="rgba(99,102,241,0.18)" strokeWidth={1} /><text x={x} y={36} textAnchor="middle" fill="#a78bfa" fontSize={6} className="mono">{p.f}Hz</text></g>})}
+        <text x={320} y={28} fill="#f472b6" fontSize={7} className="mono">χ={exp.toFixed(2)}</text>
+        <text x={320} y={38} fill="#22d3ee" fontSize={7} className="mono">A·x·y={amp.toFixed(2)}</text>
+      </svg>
+      <div style={{ position:'absolute', bottom:42, left:12, right:12, display:'flex', gap:12, alignItems:'center' }}>
+        <label className="mono" style={{ fontSize:10, color:'#e2e8f0', display:'flex', gap:6, alignItems:'center' }}>χ <input type="range" min={0.5} max={2.5} step={0.05} value={exp} onChange={e=>setExp(parseFloat(e.target.value))} style={{ width:90 }} /></label>
+        <label className="mono" style={{ fontSize:10, color:'#e2e8f0', display:'flex', gap:6, alignItems:'center' }}>A <input type="range" min={0.4} max={1.8} step={0.05} value={amp} onChange={e=>setAmp(parseFloat(e.target.value))} style={{ width:90 }} /></label>
+        <span className="mono" style={{ fontSize:9, color:'#94a3b8', marginLeft:'auto' }}>x·y = lateral · anterior — aperiodic × space</span>
+      </div>
+    </div>
+  )
+}
+
 function Home() { return <Layout title="Home"><p>Welcome. This is the starter React scaffold.</p></Layout> }
 function Kenton() {
   return (
@@ -64,11 +90,11 @@ function Kenton() {
                 </div>
               </div>
               <div style={{ position:'relative' }}>
-                <div className="kglass" style={{ borderRadius:20, overflow:'hidden', position:'relative' }}>
-                  <div style={{ width:'100%', height:320, background:'linear-gradient(135deg,#e0e7ff 0%, #f0f9ff 100%)', display:'flex', alignItems:'center', justifyContent:'center', color:'#6366f1', fontSize:14 }} className="mono">signal · FFT · 1/f</div>
+                <div className="kglass" style={{ borderRadius:20, overflow:'hidden', position:'relative', background:'#0f172a' }}>
+                  <OneOverF />
                   <div style={{ position:'absolute', bottom:10, left:10, right:10, display:'flex', gap:8, flexWrap:'wrap' }}>
                     <span className="kglass mono" style={{ fontSize:10, padding:'6px 10px', borderRadius:999 }}>NEURAL OSCILLATIONS</span>
-                    <span className="kglass mono" style={{ fontSize:10, padding:'6px 10px', borderRadius:999 }}>SPECTRAL ANALYSIS · FFT</span>
+                    <span className="kglass mono" style={{ fontSize:10, padding:'6px 10px', borderRadius:999 }}>1/f · aperiodic</span>
                   </div>
                 </div>
                 <div className="kglass" style={{ position:'absolute', bottom:-16, left:-8, borderRadius:14, padding:'10px 12px', display:'flex', gap:10, alignItems:'center', maxWidth:280 }}>
