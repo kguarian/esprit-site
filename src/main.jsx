@@ -54,7 +54,7 @@ function Kenton() {
                   Data · software ·<br /><span style={{ background:'linear-gradient(90deg,#6366f1,#06b6d4)', WebkitBackgroundClip:'text', WebkitTextFillColor:'transparent' }}>signal research.</span>
                 </div>
                 <p style={{ fontSize:15, color:'#475569', lineHeight:1.65, marginTop:14, maxWidth:560 }}>
-                  Mathematics-Computer Science, UC San Diego (Dec 2023) — Voytek Lab alum, Machine Learning Engineer in Cognitive Science. Built deep nets for brain signals at <strong>98% accuracy</strong>, patent-pending heart-signal parametrization (<strong>1000× faster</strong>), and secure data platforms that cut costs $3k/yr and lifted efficiency 30%. Published: <em>Sleep breathing patterns and neurocognitive function in a diverse Hispanic/Latino cohort</em> — <em>Alzheimer's & Dementia</em> (2023) <a href="https://doi.org/10.1002/alz.074342" target="_blank" rel="noreferrer" style={{color:"#6366f1"}}>doi:10.1002/alz.074342 ↗</a>.
+                  Mathematics-Computer Science, UC San Diego (Dec 2023) — Voytek Lab alum, Machine Learning Engineer in Cognitive Science. Built deep nets for brain signals at <strong>98% accuracy</strong>, patent-pending heart-signal parametrization (<strong>1000× faster</strong>), and secure data platforms that lifted research efficiency 30%. Published: <em>Sleep breathing patterns and neurocognitive function in a diverse Hispanic/Latino cohort</em> — <em>Alzheimer's & Dementia</em> (2023) <a href="https://doi.org/10.1002/alz.074342" target="_blank" rel="noreferrer" style={{color:"#6366f1"}}>doi:10.1002/alz.074342 ↗</a>.
                 </p>
                 <div style={{ display:'flex', gap:10, marginTop:16, flexWrap:'wrap' }}>
                   <a href="mailto:Kenton.Guarian@gmail.com" className="mono" style={{ padding:'11px 16px', borderRadius:999, textDecoration:'none', fontWeight:700, fontSize:13, background:'#0f172a', color:'#fff' }}>Kenton.Guarian@gmail.com</a>
@@ -70,7 +70,7 @@ function Kenton() {
                   </div>
                 </div>
                 <div className="kglass" style={{ position:'absolute', bottom:-16, left:-8, borderRadius:14, padding:'10px 12px', display:'flex', gap:10, alignItems:'center', maxWidth:280 }}>
-                  <img src="https://images.unsplash.com/photo-1523050854058-8df90110c9f1?w=300&q=80&auto=format&fit=crop" alt="UC San Diego Geisel" style={{ width:54, height:54, borderRadius:10, objectFit:'cover' }} loading="lazy" />
+                  <img src="https://images.unsplash.com/photo-1497366216548-37526070297c?w=300&q=80&auto=format&fit=crop" alt="UC San Diego Geisel Library exterior" style={{ width:54, height:54, borderRadius:10, objectFit:'cover' }} loading="lazy" />
                   <div><div style={{ fontWeight:700, fontSize:13 }}>UC San Diego</div><div className="mono" style={{ fontSize:10, color:'#64748b' }}>B.S. Math-CS · Provost Honors · PATHS/Golden Pyramid</div></div>
                 </div>
               </div>
@@ -89,7 +89,7 @@ function Kenton() {
                   <ul style={{ margin:'6px 0 0', paddingLeft:16, fontSize:13, color:'#334155', lineHeight:1.6 }}>
                     <li>Deep net for brain signals — <strong>98% accuracy</strong>, new benchmark</li>
                     <li>Patent-pending heart-signal parametrization — <strong>1000×</strong> speedup</li>
-                    <li>Secure data collection platform — +30% efficiency, −$3k/yr</li>
+                    <li>Secure data collection platform — +30% research efficiency</li>
                     <li><em>Alzheimer's & Dementia</em> 2023 — Sleep breathing patterns (co-author) — <a href="https://doi.org/10.1002/alz.074342" target="_blank" rel="noreferrer" style={{color:"#6366f1"}}>doi:10.1002/alz.074342</a></li>
                   </ul>
                 </div>
@@ -103,7 +103,7 @@ function Kenton() {
                 <div>
                   <div style={{ fontWeight:700 }}>Front-End Developer — UC San Diego, CSE</div>
                   <div className="mono" style={{ fontSize:11, color:'#64748b' }}>Jun – Sep 2021</div>
-                  <ul style={{ margin:'6px 0 0', paddingLeft:16, fontSize:13, color:'#334155' }}><li>Serverless code execution — 100% infra cost reduction</li></ul>
+                  <ul style={{ margin:'6px 0 0', paddingLeft:16, fontSize:13, color:'#334155' }}><li>Serverless code execution — zero-infra, instant scale</li></ul>
                 </div>
               </div>
             </div>
