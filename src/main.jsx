@@ -50,44 +50,67 @@ function Kenton() {
 }
 
 function Avery() {
-  const [open, setOpen] = React.useState(false)
+  const petals = 9
+  const [picked, setPicked] = React.useState(0)
+  const [done, setDone] = React.useState(false)
+  const lovesMe = picked % 2 === 1 // odd = loves me
+  const remaining = petals - picked
+  const phrase = picked === 0 ? 'pick a petal…' : picked < petals ? (lovesMe ? 'she loves me ♡' : 'she loves me not…') : (lovesMe ? 'she loves me! ♡' : 'she loves me not…')
+  function pick(i) {
+    if (done || i < picked) return
+    const n = picked + 1
+    setPicked(n)
+    if (n >= petals) setDone(true)
+  }
+  function reset() { setPicked(0); setDone(false) }
   return (
-    <Layout title="Avery — Schrödinger's Cat">
+    <Layout title="Avery — She loves me, she loves me not">
       <div style={{ textAlign: 'center', padding: '1rem' }}>
-        <p style={{ fontStyle: 'italic' }}>Tap the box to observe — alive or ...?</p>
-        <div
-          onClick={() => setOpen(o => !o)}
-          role="button"
-          tabIndex={0}
-          onKeyDown={e => e.key === 'Enter' && setOpen(o => !o)}
-          style={{
-            display: 'inline-block',
-            width: 220, height: 220,
-            border: '3px solid #333', borderRadius: 12,
-            background: open ? '#fef9c3' : '#334155',
-            color: open ? '#333' : '#fff',
-            cursor: 'pointer', userSelect: 'none',
-            position: 'relative', overflow: 'hidden',
-            transition: 'background 0.4s',
-          }}
-        >
-          {!open ? (
-            <div style={{ fontSize: 72, lineHeight: '200px' }}>📦</div>
-          ) : (
-            <div style={{ paddingTop: 20 }}>
-              <div style={{ fontSize: 80, animation: 'bounce 0.6s infinite alternate' }}>🐱</div>
-              <div style={{ fontSize: 14 }}>alive! (and a bit smug)</div>
-            </div>
-          )}
-          <div style={{ position: 'absolute', bottom: 6, left: 0, right: 0, fontSize: 11, opacity: 0.7 }}>
-            {open ? 'observed ✓ — click to close' : 'unobserved — click to peek'}
-          </div>
+        <p style={{ fontStyle: 'italic', minHeight: '1.5em', fontSize: 18, transition: 'all 0.3s' }}>{phrase}</p>
+        <div style={{ position: 'relative', width: 220, height: 220, margin: '0 auto' }}>
+          <div style={{
+            position: 'absolute', inset: 0, display: 'flex', alignItems: 'center', justifyContent: 'center',
+            fontSize: 54, opacity: done ? 1 : 0.15, transition: 'opacity 0.5s'
+          }}>{lovesMe ? '🐱💖' : '🐱🥀'}</div>
+          <svg width={220} height={220} viewBox="0 0 200 200" style={{ position: 'relative' }}>
+            <circle cx={100} cy={100} r={18} fill="#facc15" stroke="#a16207" strokeWidth={2} />
+            {Array.from({ length: petals }).map((_, i) => {
+              const angle = (i / petals) * 360 - 90
+              const isPicked = i < picked
+              const isNext = i === picked
+              return (
+                <g key={i} onClick={() => pick(i)} style={{ cursor: isPicked ? 'default' : 'pointer' }}
+                   role="button" tabIndex={isPicked ? -1 : 0}
+                   onKeyDown={e => e.key === 'Enter' && pick(i)}>
+                  <ellipse
+                    cx={100 + Math.cos(angle * Math.PI / 180) * 55}
+                    cy={100 + Math.sin(angle * Math.PI / 180) * 55}
+                    rx={22} ry={36} fill={isPicked ? '#e5e7eb' : isNext ? '#f472b6' : '#f9a8d4'}
+                    stroke="#be185d" strokeWidth={isNext ? 2.5 : 1.2}
+                    opacity={isPicked ? 0.25 : 1}
+                    transform={`rotate(${angle + 90} ${100 + Math.cos(angle * Math.PI / 180) * 55} ${100 + Math.sin(angle * Math.PI / 180) * 55})`}
+                    style={{ transition: 'all 0.35s', filter: isPicked ? 'grayscale(0.8)' : isNext ? 'drop-shadow(0 0 6px #f472b6)' : '' }}
+                  />
+                  {isPicked && (
+                    <text x={100 + Math.cos(angle * Math.PI / 180) * 55} y={100 + Math.sin(angle * Math.PI / 180) * 55}
+                      textAnchor="middle" dominantBaseline="middle" fontSize={10} fill="#9ca3af">✕</text>
+                  )}
+                </g>
+              )
+            })}
+          </svg>
+          {remaining > 0 && !done && <div style={{ fontSize: 11, opacity: 0.6 }}>{remaining} petals left — click the highlighted one</div>}
         </div>
-        <p style={{ marginTop: 12, fontSize: 13, opacity: 0.6 }}>
-          Standalone animation — no external assets, pure React + CSS.
-        </p>
+        {done && (
+          <div style={{ marginTop: 14, animation: 'pop 0.4s ease' }}>
+            <div style={{ fontSize: 28 }}>{lovesMe ? 'She loves me ♡' : 'She loves me not…'}</div>
+            <div style={{ fontSize: 13, opacity: 0.7 }}>{lovesMe ? 'Schrödinger would approve. The cat is definitely alive.' : 'Try again? The universe is probabilistic.'}</div>
+            <button onClick={reset} style={{ marginTop: 10, padding: '6px 14px', borderRadius: 20, border: '1px solid #333', background: '#fff', cursor: 'pointer' }}>↺ new daisy</button>
+          </div>
+        )}
+        {!done && picked > 0 && <button onClick={reset} style={{ marginTop: 10, fontSize: 12, background: 'none', border: 'none', textDecoration: 'underline', cursor: 'pointer', opacity: 0.6 }}>reset</button>}
       </div>
-      <style>{`@keyframes bounce { from{transform: translateY(0)} to{transform: translateY(-10px)} }`}</style>
+      <style>{`@keyframes pop { from{transform:scale(0.8);opacity:0} to{transform:scale(1);opacity:1} }`}</style>
     </Layout>
   )
 }
