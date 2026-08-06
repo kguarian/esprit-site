@@ -1,4 +1,11 @@
-# Local React dev workspace (not committed)
+# Dev root (React) - kept outside GH Pages worktree once Plan A is completed
+# Until `core.worktree=site` is set, these are untracked at filesystem root and should not be committed to Pages
+package.json
+package-lock.json
+src/
+vite.config.js
+
+# Legacy dev workspace (now promoted to root)
 .react-dev/
 
 # React/Vite artifacts

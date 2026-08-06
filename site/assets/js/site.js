@@ -1,5 +1,47 @@
 const pagePath = `${window.location.pathname.replace(/\/+$/, '') || '/'}/`
 
+function setTheme(theme) {
+  document.documentElement.dataset.theme = theme
+}
+
+function initialiseTheme() {
+  let savedTheme
+  try {
+    savedTheme = window.localStorage.getItem('theme')
+  } catch {
+    savedTheme = undefined
+  }
+  const systemTheme = window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light'
+  setTheme(savedTheme || systemTheme)
+
+  const topbar = document.querySelector('.topbar')
+  if (!topbar) return
+
+  const themeButton = document.createElement('button')
+  themeButton.className = 'theme-toggle'
+  themeButton.type = 'button'
+
+  function renderThemeButton() {
+    const theme = document.documentElement.dataset.theme
+    themeButton.setAttribute('aria-label', theme === 'dark' ? 'Use light theme' : 'Use dark theme')
+    themeButton.innerHTML = theme === 'dark'
+      ? '<svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="4"></circle><path d="M12 2v2M12 20v2M4.93 4.93l1.41 1.41M17.66 17.66l1.41 1.41M2 12h2M20 12h2M4.93 19.07l1.41-1.41M17.66 6.34l1.41-1.41"></path></svg>'
+      : '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M20.5 14.3A8.5 8.5 0 1 1 9.7 3.5 6.7 6.7 0 0 0 20.5 14.3Z"></path></svg>'
+  }
+
+  themeButton.addEventListener('click', () => {
+    const nextTheme = document.documentElement.dataset.theme === 'dark' ? 'light' : 'dark'
+    try {
+      window.localStorage.setItem('theme', nextTheme)
+    } catch {}
+    setTheme(nextTheme)
+    renderThemeButton()
+  })
+
+  renderThemeButton()
+  topbar.append(themeButton)
+}
+
 function renderSiteChrome(site) {
   document.querySelectorAll('[data-site-name]').forEach((element) => {
     element.textContent = site.name
@@ -58,6 +100,7 @@ function initialiseReveal() {
 }
 
 document.documentElement.classList.add('js')
+initialiseTheme()
 fetch('/data/site.json')
   .then((response) => response.json())
   .then(renderSiteChrome)
