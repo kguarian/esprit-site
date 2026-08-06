@@ -219,14 +219,18 @@ function Avery() {
         @supports not ((-webkit-backdrop-filter: blur(1px)) or (backdrop-filter: blur(1px))) { .glass{ background:rgba(15,23,42,0.88) } }
         .neon{box-shadow: 0 0 14px rgba(236,72,153,0.55), 0 0 36px rgba(6,182,212,0.32), inset 0 0 14px rgba(255,255,255,0.06)}
         .mono{font-family:'JetBrains Mono',ui-monospace,Menlo,monospace; letter-spacing:0.02em}
-        .burn{position:absolute; top:0; left:0; right:0; bottom:0; pointer-events:none; z-index:5; background: radial-gradient(600px 400px at 50% 100%, rgba(239,68,68,0.9), transparent 70%), linear-gradient(180deg, transparent 40%, rgba(239,68,68,0.35) 100%); animation: burnIn 0.6s ease}
+        .burn{position:absolute; top:0; left:0; right:0; bottom:0; pointer-events:none; z-index:5; background: radial-gradient(700px 500px at 50% 105%, rgba(239,68,68,0.95), transparent 68%), radial-gradient(900px 600px at 50% 120%, rgba(251,146,60,0.55), transparent 75%), linear-gradient(180deg, transparent 30%, rgba(69,26,3,0.55) 100%); animation: burnIn 0.7s ease}
+        .ash{position:absolute; top:0; left:0; right:0; bottom:0; pointer-events:none; z-index:6; opacity:0.55; background-image: radial-gradient(1.5px 1.5px at 20% 30%, #fff 100%, transparent 0), radial-gradient(1px 1px at 40% 70%, #fecaca 100%, transparent 0), radial-gradient(1.2px 1.2px at 65% 20%, #fff 100%, transparent 0), radial-gradient(1px 1px at 80% 50%, #fed7aa 100%, transparent 0), radial-gradient(1.4px 1.4px at 10% 80%, #fff 100%, transparent 0); animation: ashFall 7s linear infinite}
         @keyframes shimmer{0%{background-position:-200% 0}100%{background-position:200% 0}}
         @keyframes float{0%,100%{transform:translateY(0)}50%{transform:translateY(-6px)}}
         @keyframes wave{0%{stroke-dashoffset:0}100%{stroke-dashoffset:40}}
         @keyframes glowPulse{0%{filter:drop-shadow(0 0 6px #ec4899)}50%{filter:drop-shadow(0 0 16px #06b6d4)}100%{filter:drop-shadow(0 0 6px #ec4899)}}
         @keyframes decayFlash{0%{opacity:0}15%{opacity:1}30%{opacity:0}100%{opacity:0}}
         @keyframes burnIn{from{opacity:0}to{opacity:1}}
+        @keyframes ashFall{from{transform:translateY(-20px)}to{transform:translateY(20px)}}
         @keyframes flickerWorld{0%,100%{opacity:0.9}50%{opacity:1}}
+        @keyframes mushroomRise{from{transform:translateY(40px) scale(0.7); opacity:0}to{transform:translateY(0) scale(1); opacity:0.95}}
+        @keyframes virgilFade{from{opacity:0; transform:translateY(8px)}to{opacity:0.85; transform:translateY(0)}}
         .avery-shell{max-width:1280px; margin:0 auto; position:relative; z-index:2; padding:0 20px}
         .avery-main{display:grid; grid-template-columns: 1.45fr 0.9fr; gap:20px; padding:20px 0 0}
         .avery-title{font-size: clamp(22px, 2.6vw, 30px); font-weight:800; letter-spacing:-0.04em; line-height:1.05}
@@ -240,7 +244,7 @@ function Avery() {
         @media (max-width: 640px){ .avery-root{border-radius:12px; margin:-0.75rem -0.75rem 0} .avery-title{font-size:22px} }
       `}</style>
       <div className="avery-root">
-        <div className="avery-bg" /><div className="avery-grid" />{phase==='dead' && <div className="burn" />}
+        <div className="avery-bg" /><div className="avery-grid" />{phase==='dead' && <><div className="burn" /><div className="ash" /><div style={{ position:'absolute', top:'42%', left:'50%', transform:'translate(-50%,-50%)', zIndex:7, pointerEvents:'none', animation:'mushroomRise 0.9s ease' }}><svg width={180} height={180} viewBox="0 0 200 200"><ellipse cx={100} cy={42} rx={58} ry={28} fill="rgba(251,146,60,0.95)" stroke="#fff" strokeWidth={0.8} opacity={0.95} /><ellipse cx={100} cy={58} rx={42} ry={18} fill="rgba(239,68,68,0.9)" /><ellipse cx={100} cy={74} rx={28} ry={12} fill="rgba(254,249,195,0.95)" /><rect x={92} y={70} width={16} height={70} rx={4} fill="rgba(120,53,15,0.9)" /><ellipse cx={100} cy={148} rx={38} ry={8} fill="rgba(239,68,68,0.45)" /></svg><div className="mono" style={{ textAlign:'center', marginTop:6, fontSize:8, letterSpacing:2, color:'#fecaca', opacity:0.9, textShadow:'0 1px 8px rgba(0,0,0,0.9)' }}>FACILIS DESCENSUS AVERNO</div><div className="mono" style={{ textAlign:'center', fontSize:7, color:'#fed7aa', opacity:0.75 }}>Hozier — Hymn to Virgil · nuclear hymn</div></div></>}
         <div className="avery-shell">
         {/* header */}
         <div style={{ padding: '18px 18px 0', display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', flexWrap: 'wrap', gap: 12 }}>
@@ -343,7 +347,8 @@ function Avery() {
                   )}
                   {phase==='measuring' && <text x={248} y={300} textAnchor="middle" fill="#fde68a" fontSize={9} className="mono">DECOHERING… ENTANGLING WITH APPARATUS</text>}
                   {phase==='alive' && <text x={248} y={302} textAnchor="middle" fill="#6ee7b7" fontSize={9} className="mono">COLLAPSED → |alive⟩ · NO DECAY OBSERVED</text>}
-                  {phase==='dead' && <text x={248} y={302} textAnchor="middle" fill="#fecaca" fontSize={9} className="mono">COLLAPSED → |dead⟩ · WORLD BURNS 🔥</text>}
+                  {phase==='dead' && <text x={248} y={298} textAnchor="middle" fill="#fecaca" fontSize={9} className="mono">COLLAPSED → |dead⟩ · WORLD BURNS</text>}
+                  {phase==='dead' && <text x={248} y={312} textAnchor="middle" fill="#f87171" fontSize={7} className="mono">nuclear ash · hymn to Virgil: facilis descensus Averno</text>}
                   {/* coupling */}
                   <path d="M108 168 V190" stroke="#a78bfa" strokeWidth={1} strokeDasharray="5 4" opacity={0.6} />
                   <path d="M456 144 V190" stroke={phase==='dead' ? '#ef4444' : '#10b981'} strokeWidth={1} strokeDasharray="5 4" opacity={0.65} />
