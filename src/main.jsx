@@ -256,7 +256,211 @@ function OneOverF() {
   )
 }
 
-function Home() { return <Layout title="Home"><p>Welcome. This is the starter React scaffold.</p></Layout> }
+function Home() {
+  // Cornsweeper-inspired playable homepage — the nav IS the game
+  const ROWS = 10, COLS = 16
+  const THEMES = {
+    kenton: { label:'KENTON', icon:'◈', href:'/kenton', color:'#6366f1', bg:'#eef2ff', desc:'Data · signal · resume' },
+    ml: { label:'ML LAB', icon:'⬢', href:'/ml', color:'#06b6d4', bg:'#ecfeff', desc:'SPY/NVDA 17-feat MLP' },
+    avery: { label:'AVERY', icon:'🐱', href:'/avery', color:'#ec4899', bg:'#fdf2f8', desc:'Schrödinger protocol' },
+    code: { label:'CODE', icon:'▣', href:'/code', color:'#10b981', bg:'#ecfdf5', desc:'Projects' },
+    links: { label:'LINKS', icon:'↗', href:'/links', color:'#f59e0b', bg:'#fffbeb', desc:'Elsewhere' },
+    contact: { label:'CONTACT', icon:'✉', href:'/contact', color:'#8b5cf6', bg:'#f5f3ff', desc:'Say hi' },
+  }
+  const THEME_KEYS = Object.keys(THEMES)
+  // seeded board so it's stable per load
+  const board = React.useMemo(()=>{
+    let s=1337; const rnd=()=>((s=s*16807%2147483647)-1)/2147483646
+    const cells = Array(ROWS*COLS).fill(0).map((_,i)=>{
+      const r=Math.floor(i/COLS), c=i%COLS
+      const isTreasure = rnd()<0.075
+      const isTrap = !isTreasure && rnd()<0.11
+      const theme = isTreasure ? THEME_KEYS[Math.floor(rnd()*THEME_KEYS.length)] : null
+      return { r,c, isTrap, isTreasure, theme, revealed:false, flagged:false, adj:0 }
+    })
+    // compute adjacency trap counts
+    cells.forEach(cell=>{
+      let n=0
+      for(let dr=-1;dr<=1;dr++) for(let dc=-1;dc<=1;dc++){
+        if(!dr&&!dc) continue
+        const nr=cell.r+dr,nc=cell.c+dc
+        if(nr>=0&&nr<ROWS&&nc>=0&&nc<COLS&&cells[nr*COLS+nc].isTrap) n++
+      }
+      cell.adj=n
+    })
+    // ensure first click area safe: clear traps around center
+    const cx=Math.floor(COLS/2), cy=Math.floor(ROWS/2)
+    for(let dr=-1;dr<=1;dr++) for(let dc=-1;dc<=1;dc++){
+      const c=cells[(cy+dr)*COLS+(cx+dc)]
+      if(c) c.isTrap=false
+    }
+    return cells
+  },[])
+  const [revealed, setRevealed] = React.useState(()=> new Set())
+  const [flagged, setFlagged] = React.useState(()=> new Set())
+  const [gameOver, setGameOver] = React.useState(false)
+  const [won, setWon] = React.useState(false)
+  const [moves, setMoves] = React.useState(0)
+  const [found, setFound] = React.useState([]) // theme keys found
+  const [shake, setShake] = React.useState(null)
+  const [konami, setKonami] = React.useState(false)
+  const totalTreasures = React.useMemo(()=> board.filter(c=>c.isTreasure).length, [board])
+
+  React.useEffect(()=>{
+    const seq=['ArrowUp','ArrowUp','ArrowDown','ArrowDown','ArrowLeft','ArrowRight','ArrowLeft','ArrowRight','b','a']
+    let p=0
+    const h=e=>{
+      if(e.key===seq[p]){p++; if(p===seq.length){setKonami(true); p=0}} else p=0
+    }
+    window.addEventListener('keydown',h); return()=>window.removeEventListener('keydown',h)
+  },[])
+
+  const idx=(r,c)=>r*COLS+c
+  const flood=(startIdx, rev)=>{
+    const q=[startIdx], seen=new Set([startIdx])
+    while(q.length){
+      const i=q.shift(); const cell=board[i]
+      rev.add(i)
+      if(cell.adj===0 && !cell.isTrap){
+        for(let dr=-1;dr<=1;dr++) for(let dc=-1;dc<=1;dc++){
+          const nr=cell.r+dr,nc=cell.c+dc
+          if(nr<0||nr>=ROWS||nc<0||nc>=COLS) continue
+          const ni=idx(nr,nc)
+          if(seen.has(ni)||rev.has(ni)||flagged.has(ni)) continue
+          if(board[ni].isTrap) continue
+          seen.add(ni); q.push(ni)
+        }
+      }
+    }
+  }
+  const onReveal=(r,c)=>{
+    if(gameOver||won) return
+    const i=idx(r,c)
+    if(revealed.has(i)||flagged.has(i)) return
+    const cell=board[i]
+    if(cell.isTrap){
+      const nr=new Set(revealed); nr.add(i); setRevealed(nr); setGameOver(true); setShake(i); setTimeout(()=>setShake(null),400)
+      return
+    }
+    const nr=new Set(revealed)
+    if(cell.adj===0) flood(i,nr); else nr.add(i)
+    setRevealed(nr); setMoves(m=>m+1)
+    if(cell.isTreasure && !found.includes(cell.theme)) setFound(f=>[...f, cell.theme])
+    // win: all non-traps revealed
+    const nonTraps=board.filter(c=>!c.isTrap).length
+    if(nr.size===nonTraps) setWon(true)
+  }
+  const onFlag=(e,r,c)=>{
+    e.preventDefault()
+    if(gameOver||won) return
+    const i=idx(r,c)
+    if(revealed.has(i)) return
+    const nf=new Set(flagged)
+    if(nf.has(i)) nf.delete(i); else nf.add(i)
+    setFlagged(nf)
+  }
+  const reset=()=>{ setRevealed(new Set()); setFlagged(new Set()); setGameOver(false); setWon(false); setMoves(0); setFound([]) }
+
+  const flaggedTraps=[...flagged].filter(i=>board[i].isTrap).length
+  return (
+    <Layout title="">
+      <style>{`
+        .home-arcade{margin:-24px -24px 0; background:#020617; color:#e2e8f0; overflow:hidden; position:relative; min-height:calc(100vh - 90px)}
+        .home-bg{position:absolute; inset:0; background: radial-gradient(900px 600px at 20% 0%, rgba(99,102,241,0.22), transparent 60%), radial-gradient(800px 500px at 95% 40%, rgba(236,72,153,0.18), transparent 62%), radial-gradient(700px 500px at 50% 85%, rgba(6,182,212,0.14), transparent 70%), linear-gradient(180deg,#020617 0%, #0f172a 100%)}
+        .home-grid{position:absolute; inset:0; opacity:0.05; background-image: linear-gradient(rgba(255,255,255,0.6) 1px, transparent 1px), linear-gradient(90deg, rgba(255,255,255,0.6) 1px, transparent 1px); background-size:32px 32px}
+        .mono{font-family:'JetBrains Mono',ui-monospace,monospace}
+        .cell{aspect-ratio:1; display:flex; align-items:center; justify-content:center; font-size:13px; font-weight:800; border-radius:8px; cursor:pointer; user-select:none; transition: all 0.12s; position:relative; border:1px solid rgba(255,255,255,0.08)}
+        .cell-hidden{background:linear-gradient(180deg, rgba(255,255,255,0.10), rgba(255,255,255,0.04)); backdrop-filter:blur(8px); border:1px solid rgba(255,255,255,0.10); box-shadow: inset 0 1px 0 rgba(255,255,255,0.12), 0 2px 10px rgba(0,0,0,0.25)}
+        .cell-hidden:hover{background:rgba(255,255,255,0.14); transform:translateY(-1px); box-shadow:0 4px 16px rgba(0,0,0,0.35)}
+        .cell-revealed{background:rgba(15,23,42,0.85); border-color:rgba(255,255,255,0.06); cursor:default}
+        .cell-trap{background:#7f1d1d !important; color:#fecaca; animation:shake 0.35s}
+        .cell-treasure{box-shadow:0 0 14px currentColor}
+        @keyframes shake{0%,100%{transform:translateX(0)}25%{transform:translateX(-4px)}75%{transform:translateX(4px)}}
+        @keyframes pop{0%{transform:scale(0.7)}100%{transform:scale(1)}}
+        .num-1{color:#22d3ee} .num-2{color:#4ade80} .num-3{color:#f472b6} .num-4{color:#a78bfa} .num-5{color:#f59e0b} .num-6{color:#38bdf8} .num-7{color:#fb7185} .num-8{color:#94a3b8}
+      `}</style>
+      <div className="home-arcade">
+        <div className="home-bg" /><div className="home-grid" />
+        <div style={{ position:'relative', zIndex:2, maxWidth:1180, margin:'0 auto', padding:'18px 18px 28px' }}>
+          <div style={{ display:'flex', gap:12, flexWrap:'wrap', alignItems:'flex-start', justifyContent:'space-between' }}>
+            <div>
+              <div className="mono" style={{ fontSize:10, letterSpacing:3, color:'#22d3ee' }}>MY-ESPRIT.COM — PLAYABLE HOMEPAGE</div>
+              <div style={{ fontSize:'clamp(26px,4vw,40px)', fontWeight:900, letterSpacing:'-0.04em', lineHeight:1, marginTop:6 }}>The menu <span style={{ background:'linear-gradient(90deg,#f472b6,#22d3ee,#a78bfa)', WebkitBackgroundClip:'text', WebkitTextFillColor:'transparent' }}>is the game.</span></div>
+              <div style={{ fontSize:13, color:'#94a3b8', marginTop:6, maxWidth:560 }}>Cornsweeper-style minesweeper. Click to dig, right-click to flag traps. Uncover treasures to unlock site sections. The whole website lives under the tiles.</div>
+            </div>
+            <div style={{ display:'flex', gap:10, flexWrap:'wrap', alignItems:'center' }}>
+              <div className="mono" style={{ background:'rgba(255,255,255,0.07)', border:'1px solid rgba(255,255,255,0.10)', borderRadius:999, padding:'8px 12px', fontSize:11 }}>⛏ {moves} moves · 🚩 {flaggedTraps}/{board.filter(c=>c.isTrap).length} flagged · 💎 {found.length}/{totalTreasures} portals</div>
+              <button onClick={reset} className="mono" style={{ background:'#fff', color:'#0f172a', border:'none', borderRadius:999, padding:'9px 14px', fontWeight:800, cursor:'pointer', fontSize:12 }}>↺ New board</button>
+            </div>
+          </div>
+
+          {(gameOver || won) && (
+            <div style={{ marginTop:12, padding:'10px 14px', borderRadius:12, background: won?'linear-gradient(90deg,#065f46,#0891b2)':'#7f1d1d', color:'#fff', display:'flex', gap:10, alignItems:'center', justifyContent:'space-between', flexWrap:'wrap' }}>
+              <span className="mono" style={{ fontWeight:800, fontSize:12 }}>{won ? '✦ CLEAR — all portals uncovered!' : '✖ BOOM — you hit a trap!'}</span>
+              <button onClick={reset} style={{ background:'#fff', color:won?'#065f46':'#7f1d1d', border:'none', borderRadius:999, padding:'6px 12px', fontWeight:800, cursor:'pointer' }}>Play again</button>
+            </div>
+          )}
+          {konami && <div className="mono" style={{ marginTop:10, fontSize:11, color:'#fde68a' }}>↑↑↓↓←→←→BA — Konami unlocked: all portals revealed below ✨</div>}
+
+          <div style={{ display:'grid', gridTemplateColumns:'1.15fr 0.85fr', gap:16, marginTop:16 }}>
+            <div style={{ background:'rgba(255,255,255,0.06)', backdropFilter:'blur(14px)', border:'1px solid rgba(255,255,255,0.10)', borderRadius:16, padding:12 }}>
+              <div style={{ display:'grid', gridTemplateColumns:`repeat(${COLS},1fr)`, gap:6 }}>
+                {board.map(cell=>{
+                  const i=idx(cell.r,cell.c)
+                  const isRev=revealed.has(i) || konami
+                  const isFlag=flagged.has(i)
+                  const isShake=shake===i
+                  if(!isRev){
+                    return <button key={i} onClick={()=>onReveal(cell.r,cell.c)} onContextMenu={e=>onFlag(e,cell.r,cell.c)} className={`cell cell-hidden ${isShake?'cell-trap':''}`} aria-label="hidden tile">{isFlag ? '🚩' : ''}</button>
+                  }
+                  if(cell.isTrap) return <div key={i} className="cell cell-revealed cell-trap">✕</div>
+                  if(cell.isTreasure){
+                    const t=THEMES[cell.theme]
+                    return <Link key={i} to={t.href} className="cell cell-revealed cell-treasure" style={{ color:t.color, background:t.bg, textDecoration:'none', animation:'pop 0.25s', fontSize:16 }} title={t.label}>{t.icon}</Link>
+                  }
+                  return <div key={i} className={`cell cell-revealed ${cell.adj?`num-${cell.adj}`:''}`} style={{ fontSize:12 }}>{cell.adj||''}</div>
+                })}
+              </div>
+              <div className="mono" style={{ fontSize:10, color:'#64748b', marginTop:8, display:'flex', gap:10, flexWrap:'wrap' }}>
+                <span>Left click: dig</span><span>·</span><span>Right click: 🚩 flag</span><span>·</span><span>Empty tiles flood-fill</span>
+              </div>
+            </div>
+
+            <div style={{ display:'flex', flexDirection:'column', gap:12 }}>
+              <div style={{ background:'#fff', color:'#0f172a', borderRadius:16, padding:14 }}>
+                <div className="mono" style={{ fontSize:10, letterSpacing:2, color:'#6366f1' }}>PORTALS UNLOCKED</div>
+                <div style={{ display:'grid', gridTemplateColumns:'1fr 1fr', gap:8, marginTop:10 }}>
+                  {THEME_KEYS.map(k=>{
+                    const t=THEMES[k]; const unlocked=found.includes(k) || konami
+                    return (
+                      <Link key={k} to={t.href} style={{ display:'flex', gap:10, alignItems:'center', padding:'10px 10px', borderRadius:12, textDecoration:'none', background: unlocked? t.bg : '#f1f5f9', border:`1px solid ${unlocked? t.color+'40':'#e2e8f0'}`, opacity: unlocked?1:0.55 }}>
+                        <span style={{ width:34, height:34, borderRadius:10, display:'flex', alignItems:'center', justifyContent:'center', background: unlocked? t.color:'#94a3b8', color:'#fff', fontWeight:800 }}>{t.icon}</span>
+                        <span><span style={{ display:'block', fontWeight:800, fontSize:12, color:'#0f172a' }}>{t.label} {unlocked?'':'🔒'}</span><span className="mono" style={{ fontSize:10, color:'#64748b' }}>{unlocked? t.desc : 'Find in board'}</span></span>
+                      </Link>
+                    )
+                  })}
+                </div>
+                <div className="mono" style={{ fontSize:10, color:'#94a3b8', marginTop:8 }}>{found.length===0 ? 'Tip: treasures hide on low-number tiles — use flags to mark traps.' : `Found: ${found.map(k=>THEMES[k].label).join(' · ')}`}</div>
+              </div>
+              <div style={{ background:'rgba(255,255,255,0.07)', border:'1px solid rgba(255,255,255,0.10)', borderRadius:16, padding:14, color:'#e2e8f0' }}>
+                <div className="mono" style={{ fontSize:10, letterSpacing:2, color:'#22d3ee' }}>HOW TO PLAY</div>
+                <ol style={{ margin:'8px 0 0', paddingLeft:18, fontSize:12, lineHeight:1.6, color:'#cbd5e1' }}>
+                  <li>Numbers = adjacent traps. Flag what you suspect, dig what you trust.</li>
+                  <li>Dig a <strong style={{color:'#fff'}}>treasure</strong> (◈⬢🐱▣) — it becomes a portal link.</li>
+                  <li>Clear the board or just portal-hop — either way, the homepage is the lobby.</li>
+                </ol>
+                <div style={{ marginTop:10, display:'flex', gap:8 }}>
+                  <Link to="/kenton" style={{ fontSize:12, fontWeight:800, color:'#fff', background:'#6366f1', padding:'7px 12px', borderRadius:999, textDecoration:'none' }}>Skip to Kenton →</Link>
+                  <Link to="/avery" style={{ fontSize:12, color:'#f472b6', padding:'7px 0', textDecoration:'none' }}>or Avery →</Link>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </Layout>
+  )
+}
 function Kenton() {
   return (
     <Layout title="">
