@@ -237,7 +237,7 @@ function Avery() {
               <div className="mono" style={{ fontSize: 10, letterSpacing: 2, opacity: 0.7 }}>WAVEFUNCTION</div>
               <div className="mono" style={{ fontSize: 11, marginTop: 6, lineHeight: 1.6 }}>
                 <span style={{ color: '#f472b6' }}>|ψ(t)⟩</span> = α(t)|not decayed⟩|alive⟩ + β(t)|decayed⟩|dead⟩<br />
-                <span style={{ opacity: 0.6 }}>α = e^{-λt/2}, |α|² = e^{-λt}, |β|² = 1-e^{-λt}</span><br />
+                <span style={{ opacity: 0.6 }}>α = e<sup>-λt/2</sup>, |α|² = e<sup>-λt</sup>, |β|² = 1-e<sup>-λt</sup></span><br />
                 <span style={{ opacity: 0.6 }}>Half-life 1s ⇒ λ=ln2≈0.693 s⁻¹. At t=1s, P=½.</span>
               </div>
               <div style={{ marginTop: 10, height: 54, background: 'rgba(0,0,0,0.35)', borderRadius: 10, padding: 6, display: 'flex', alignItems: 'center', gap: 6 }}>
