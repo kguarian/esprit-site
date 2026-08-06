@@ -58,7 +58,6 @@ function Kenton() {
                 </p>
                 <div style={{ display:'flex', gap:10, marginTop:16, flexWrap:'wrap' }}>
                   <a href="mailto:Kenton.Guarian@gmail.com" className="mono" style={{ padding:'11px 16px', borderRadius:999, textDecoration:'none', fontWeight:700, fontSize:13, background:'#0f172a', color:'#fff' }}>Kenton.Guarian@gmail.com</a>
-                  <a href="tel:6195506378" className="mono kglass" style={{ padding:'11px 16px', borderRadius:999, textDecoration:'none', color:'#0f172a', fontWeight:600, fontSize:13 }}>(619) 550-6378</a>
                   <a href="https://voyteklab.com/members" target="_blank" rel="noreferrer" className="mono" style={{ fontSize:11, alignSelf:'center', color:'#6366f1' }}>Voytek Lab ↗</a>
                 </div>
               </div>
