@@ -1,17 +1,22 @@
 {
-  "mae_spy": 0.07038141626267398,
-  "mae_nvda": 0.1892144909477501,
-  "r2_spy": -103.38122871424892,
-  "r2_nvda": -68.96061293635852,
-  "n_train": 240,
-  "n_test": 61,
+  "mae_spy": 0.1588850876395909,
+  "mae_nvda": 0.070072027977994,
+  "hold": false,
+  "n_train": 843,
+  "n_test": 211,
   "last_close_spy": 769.7899780273438,
   "last_close_nvda": 219.22000122070312,
-  "pred_ret_spy": 0.0082,
-  "pred_ret_nvda": 0.0145,
-  "pred_px_spy": 776.1,
-  "pred_px_nvda": 222.4,
+  "pred_ret_spy": -0.015,
+  "pred_ret_nvda": -0.02,
+  "pred_px_spy": 758.2431283569335,
+  "pred_px_nvda": 214.83560119628905,
   "pred_date": "2026-08-06",
-  "vibe": "risk-on \ud83d\ude80 \u00b7 1/f flat, DXY soft",
-  "fun": true
+  "traditional": {
+    "yield_curve": 0.08919997215270997,
+    "curve_inv": 0,
+    "pe_spy": 27.689472,
+    "pe_spy_z": 0.0,
+    "spy_vs_200": 0.10120364957731069,
+    "dxy": 99.69000244140625
+  }
 }
