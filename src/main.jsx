@@ -58,6 +58,8 @@ function Kenton() {
                 </p>
                 <div style={{ display:'flex', gap:10, marginTop:16, flexWrap:'wrap' }}>
                   <a href="mailto:Kenton.Guarian@gmail.com" className="mono" style={{ padding:'11px 16px', borderRadius:999, textDecoration:'none', fontWeight:700, fontSize:13, background:'#0f172a', color:'#fff' }}>Kenton.Guarian@gmail.com</a>
+                  <a href="https://www.linkedin.com/in/kguarian/" target="_blank" rel="noreferrer" className="mono" style={{ fontSize:11, alignSelf:'center', color:'#0a66c2', background:'#fff', border:'1px solid #e2e8f0', padding:'6px 10px', borderRadius:999, textDecoration:'none' }}>in · kguarian ↗</a>
+                  <a href="https://github.com/kguarian" target="_blank" rel="noreferrer" className="mono" style={{ fontSize:11, alignSelf:'center', color:'#0f172a', background:'#fff', border:'1px solid #e2e8f0', padding:'6px 10px', borderRadius:999, textDecoration:'none' }}>GitHub · 34 repos ↗</a>
                   <a href="https://voyteklab.com/members" target="_blank" rel="noreferrer" className="mono" style={{ fontSize:11, alignSelf:'center', color:'#6366f1' }}>Voytek Lab ↗</a>
                 </div>
               </div>
