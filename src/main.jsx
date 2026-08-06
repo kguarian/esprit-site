@@ -72,30 +72,42 @@ function Avery() {
   return (
     <Layout title="">
       <style>{`
-        .avery-root{font-family:-apple-system,BlinkMacSystemFont,'SF Pro Display','Space Grotesk',system-ui,sans-serif; color:#e2e8f0; margin:-1rem -1rem 0; padding:0; overflow:hidden; border-radius:16px; background:#020617; position:relative}
+        .avery-root{font-family:-apple-system,BlinkMacSystemFont,'SF Pro Display',system-ui,sans-serif; color:#e2e8f0; margin:-1.25rem -1.25rem 0; padding:0; overflow:hidden; border-radius:20px; background:#020617; position:relative}
         .avery-bg{position:absolute; top:0; left:0; right:0; bottom:0; background:
-          radial-gradient(600px 400px at 20% 10%, rgba(236,72,153,0.28), transparent 60%),
-          radial-gradient(800px 500px at 90% 90%, rgba(6,182,212,0.22), transparent 60%),
-          radial-gradient(500px 500px at 50% 50%, rgba(139,92,246,0.18), transparent 70%),
-          linear-gradient(180deg,#020617 0%, #0f172a 100%); z-index:0}
-        .avery-grid{position:absolute; top:0; left:0; right:0; bottom:0; opacity:0.08; background-image: linear-gradient(rgba(255,255,255,0.12) 1px, transparent 1px), linear-gradient(90deg, rgba(255,255,255,0.12) 1px, transparent 1px); background-size:40px 40px; z-index:0}
-        .glass{-webkit-backdrop-filter:blur(16px) saturate(1.4); backdrop-filter:blur(16px) saturate(1.4); background:rgba(255,255,255,0.07); border:1px solid rgba(255,255,255,0.12); box-shadow: 0 8px 40px rgba(0,0,0,0.45), inset 0 1px 0 rgba(255,255,255,0.15)}
-        @supports not ((-webkit-backdrop-filter: blur(1px)) or (backdrop-filter: blur(1px))) { .glass{ background:rgba(15,23,42,0.85) } }
-        .neon{box-shadow: 0 0 12px rgba(236,72,153,0.6), 0 0 32px rgba(6,182,212,0.35), inset 0 0 12px rgba(255,255,255,0.08)}
-        .mono{font-family:'JetBrains Mono',monospace}
+          radial-gradient(700px 420px at 18% 8%, rgba(236,72,153,0.30), transparent 62%),
+          radial-gradient(720px 480px at 88% 92%, rgba(6,182,212,0.24), transparent 62%),
+          radial-gradient(560px 520px at 52% 48%, rgba(139,92,246,0.16), transparent 72%),
+          linear-gradient(180deg,#020617 0%, #0b1220 100%); z-index:0}
+        .avery-grid{position:absolute; top:0; left:0; right:0; bottom:0; opacity:0.06; background-image: linear-gradient(rgba(255,255,255,0.10) 1px, transparent 1px), linear-gradient(90deg, rgba(255,255,255,0.10) 1px, transparent 1px); background-size:36px 36px; z-index:0}
+        .glass{-webkit-backdrop-filter:blur(18px) saturate(1.35); backdrop-filter:blur(18px) saturate(1.35); background:rgba(255,255,255,0.06); border:1px solid rgba(255,255,255,0.10); box-shadow: 0 10px 48px rgba(0,0,0,0.5), inset 0 1px 0 rgba(255,255,255,0.14)}
+        @supports not ((-webkit-backdrop-filter: blur(1px)) or (backdrop-filter: blur(1px))) { .glass{ background:rgba(15,23,42,0.88) } }
+        .neon{box-shadow: 0 0 14px rgba(236,72,153,0.55), 0 0 36px rgba(6,182,212,0.32), inset 0 0 14px rgba(255,255,255,0.06)}
+        .mono{font-family:'JetBrains Mono',ui-monospace,Menlo,monospace; letter-spacing:0.02em}
         @keyframes shimmer{0%{background-position:-200% 0}100%{background-position:200% 0}}
         @keyframes float{0%,100%{transform:translateY(0)}50%{transform:translateY(-6px)}}
         @keyframes wave{0%{stroke-dashoffset:0}100%{stroke-dashoffset:40}}
-        @keyframes glowPulse{0%{filter:drop-shadow(0 0 6px #ec4899)}50%{filter:drop-shadow(0 0 14px #06b6d4)}100%{filter:drop-shadow(0 0 6px #ec4899)}}
+        @keyframes glowPulse{0%{filter:drop-shadow(0 0 6px #ec4899)}50%{filter:drop-shadow(0 0 16px #06b6d4)}100%{filter:drop-shadow(0 0 6px #ec4899)}}
         @keyframes decayFlash{0%{opacity:0}15%{opacity:1}30%{opacity:0}100%{opacity:0}}
+        .avery-shell{max-width:1120px; margin:0 auto; position:relative; z-index:2}
+        .avery-main{display:grid; grid-template-columns: 1.35fr 0.85fr; gap:16px; padding:16px 18px 18px}
+        .avery-title{font-size: clamp(22px, 2.6vw, 30px); font-weight:800; letter-spacing:-0.04em; line-height:1.05}
+        .avery-btn{min-height:44px; padding:0 18px; border-radius:999px; font-weight:700; font-size:13.5px; cursor:pointer; transition: transform 0.12s, box-shadow 0.2s, opacity 0.2s; display:inline-flex; align-items:center; gap:8px}
+        .avery-btn:active{transform:scale(0.98)}
+        .avery-btn-primary{color:#fff; background:linear-gradient(90deg,#ec4899,#7c3aed); border:none; box-shadow: 0 6px 20px rgba(236,72,153,0.45)}
+        .avery-btn-primary:hover{box-shadow: 0 8px 28px rgba(236,72,153,0.6), 0 0 0 3px rgba(236,72,153,0.18)}
+        .avery-btn-ghost{color:#e2e8f0; background:rgba(255,255,255,0.06); border:1px solid rgba(255,255,255,0.12)}
+        .avery-btn-ghost:hover{background:rgba(255,255,255,0.10)}
+        @media (max-width: 960px){ .avery-main{grid-template-columns:1fr} .avery-shell{max-width:720px} }
+        @media (max-width: 640px){ .avery-root{border-radius:12px; margin:-0.75rem -0.75rem 0} .avery-title{font-size:22px} }
       `}</style>
       <div className="avery-root">
         <div className="avery-bg" /><div className="avery-grid" />
+        <div className="avery-shell">
         {/* header */}
-        <div style={{ position: 'relative', zIndex: 2, padding: '18px 18px 0', display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: 12 }}>
+        <div style={{ padding: '18px 18px 0', display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', flexWrap: 'wrap', gap: 12 }}>
           <div>
             <div className="mono" style={{ fontSize: 10, letterSpacing: 3, opacity: 0.7, color: '#22d3ee' }}>AVERY LAB // SCHRÖDINGER PROTOCOL</div>
-            <div style={{ fontSize: 26, fontWeight: 800, letterSpacing: -0.5, background: 'linear-gradient(90deg,#f472b6,#22d3ee,#a78bfa)', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent' }}>The Cat Experiment</div>
+            <div className="avery-title" style={{ background: 'linear-gradient(90deg,#f472b6,#22d3ee,#a78bfa)', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent' }}>The Cat Experiment</div>
             <div style={{ fontSize: 12, opacity: 0.75 }}>Physically accurate · sealed box · single ²¹⁰Po atom · Geiger + hammer + HCN vial · unitary evolution until measurement</div>
           </div>
           <div className="glass" style={{ borderRadius: 12, padding: '10px 14px', minWidth: 160 }}>
@@ -110,7 +122,7 @@ function Avery() {
         </div>
 
         {/* main lab */}
-        <div style={{ position: 'relative', zIndex: 2, display: 'grid', gridTemplateColumns: '1.2fr 0.9fr', gap: 14, padding: 18 }}>
+        <div className="avery-main">
           {/* left: apparatus */}
           <div className="glass neon" style={{ borderRadius: 16, padding: 14, position: 'relative', overflow: 'hidden' }}>
             <div className="mono" style={{ fontSize: 10, letterSpacing: 2, opacity: 0.7, marginBottom: 8 }}>APPARATUS — CROSS SECTION</div>
@@ -221,13 +233,13 @@ function Avery() {
               </svg>
             </div>
 
-            <div style={{ display: 'flex', gap: 8, marginTop: 10, flexWrap: 'wrap' }}>
-              {phase === 'ready' && <button onClick={arm} className="glass" style={{ padding: '10px 16px', borderRadius: 12, color: '#fff', background: 'linear-gradient(90deg,#ec4899,#06b6d4)', border: 'none', cursor: 'pointer', fontWeight: 700 }}>⚡ Arm atom (seal box)</button>}
+            <div style={{ display: 'flex', gap: 8, marginTop: 12, flexWrap: 'wrap' }}>
+              {phase === 'ready' && <button onClick={arm} className="avery-btn avery-btn-primary">⚡ Arm atom — seal box</button>}
               {phase === 'arming' && <span className="mono" style={{ fontSize: 12, padding: '10px 0', color: '#fde68a' }}>Sealing… evacuating decoherence…</span>}
-              {phase === 'superposed' && <button onClick={measure} className="glass" style={{ padding: '10px 16px', borderRadius: 12, color: '#fff', background: 'linear-gradient(90deg,#7c3aed,#ec4899)', border: 'none', cursor: 'pointer', fontWeight: 700, boxShadow: '0 0 18px rgba(236,72,153,0.6)' }}>👁️ Measure — open box (collapse)</button>}
+              {phase === 'superposed' && <button onClick={measure} className="avery-btn avery-btn-primary">👁️ Measure — open box</button>}
               {phase === 'measuring' && <span className="mono" style={{ fontSize: 12, padding: '10px 0', color: '#fde68a' }}>Collapsing wavefunction…</span>}
-              {(phase === 'alive' || phase === 'dead') && <button onClick={reset} className="glass" style={{ padding: '10px 16px', borderRadius: 12, color: '#fff', background: 'rgba(255,255,255,0.08)', border: '1px solid rgba(255,255,255,0.14)', cursor: 'pointer', fontWeight: 700 }}>↺ New run — re-prepare |ψ⟩</button>}
-              {total > 0 && <button onClick={() => setStats({ alive: 0, dead: 0 })} style={{ padding: '10px 12px', borderRadius: 12, background: 'transparent', color: '#94a3b8', border: '1px solid rgba(148,163,184,0.25)', cursor: 'pointer', fontSize: 12 }}>Reset stats</button>}
+              {(phase === 'alive' || phase === 'dead') && <button onClick={reset} className="avery-btn avery-btn-ghost">↺ New run — re-prepare |ψ⟩</button>}
+              {total > 0 && <button onClick={() => setStats({ alive: 0, dead: 0 })} className="avery-btn" style={{ background: 'transparent', color: '#94a3b8', border: '1px solid rgba(148,163,184,0.25)' }}>Reset stats</button>}
             </div>
           </div>
 
@@ -273,6 +285,7 @@ function Avery() {
               <div style={{ width: 10, height: 10, borderRadius: '50%', background: phase === 'superposed' ? '#f472b6' : phase === 'alive' ? '#10b981' : phase === 'dead' ? '#ef4444' : '#334155', boxShadow: `0 0 10px ${phase === 'superposed' ? '#ec4899' : phase === 'alive' ? '#10b981' : phase === 'dead' ? '#ef4444' : 'transparent'}`, animation: phase !== 'ready' ? 'glowPulse 1s infinite' : '' }} />
             </div>
           </div>
+        </div>
         </div>
       </div>
     </Layout>
