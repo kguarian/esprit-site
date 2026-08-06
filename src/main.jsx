@@ -219,11 +219,14 @@ function Avery() {
         @supports not ((-webkit-backdrop-filter: blur(1px)) or (backdrop-filter: blur(1px))) { .glass{ background:rgba(15,23,42,0.88) } }
         .neon{box-shadow: 0 0 14px rgba(236,72,153,0.55), 0 0 36px rgba(6,182,212,0.32), inset 0 0 14px rgba(255,255,255,0.06)}
         .mono{font-family:'JetBrains Mono',ui-monospace,Menlo,monospace; letter-spacing:0.02em}
+        .burn{position:absolute; top:0; left:0; right:0; bottom:0; pointer-events:none; z-index:5; background: radial-gradient(600px 400px at 50% 100%, rgba(239,68,68,0.9), transparent 70%), linear-gradient(180deg, transparent 40%, rgba(239,68,68,0.35) 100%); animation: burnIn 0.6s ease}
         @keyframes shimmer{0%{background-position:-200% 0}100%{background-position:200% 0}}
         @keyframes float{0%,100%{transform:translateY(0)}50%{transform:translateY(-6px)}}
         @keyframes wave{0%{stroke-dashoffset:0}100%{stroke-dashoffset:40}}
         @keyframes glowPulse{0%{filter:drop-shadow(0 0 6px #ec4899)}50%{filter:drop-shadow(0 0 16px #06b6d4)}100%{filter:drop-shadow(0 0 6px #ec4899)}}
         @keyframes decayFlash{0%{opacity:0}15%{opacity:1}30%{opacity:0}100%{opacity:0}}
+        @keyframes burnIn{from{opacity:0}to{opacity:1}}
+        @keyframes flickerWorld{0%,100%{opacity:0.9}50%{opacity:1}}
         .avery-shell{max-width:1280px; margin:0 auto; position:relative; z-index:2; padding:0 20px}
         .avery-main{display:grid; grid-template-columns: 1.45fr 0.9fr; gap:20px; padding:20px 0 0}
         .avery-title{font-size: clamp(22px, 2.6vw, 30px); font-weight:800; letter-spacing:-0.04em; line-height:1.05}
@@ -237,7 +240,7 @@ function Avery() {
         @media (max-width: 640px){ .avery-root{border-radius:12px; margin:-0.75rem -0.75rem 0} .avery-title{font-size:22px} }
       `}</style>
       <div className="avery-root">
-        <div className="avery-bg" /><div className="avery-grid" />
+        <div className="avery-bg" /><div className="avery-grid" />{phase==='dead' && <div className="burn" />}
         <div className="avery-shell">
         {/* header */}
         <div style={{ padding: '18px 18px 0', display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', flexWrap: 'wrap', gap: 12 }}>
@@ -340,7 +343,7 @@ function Avery() {
                   )}
                   {phase==='measuring' && <text x={248} y={300} textAnchor="middle" fill="#fde68a" fontSize={9} className="mono">DECOHERING… ENTANGLING WITH APPARATUS</text>}
                   {phase==='alive' && <text x={248} y={302} textAnchor="middle" fill="#6ee7b7" fontSize={9} className="mono">COLLAPSED → |alive⟩ · NO DECAY OBSERVED</text>}
-                  {phase==='dead' && <text x={248} y={302} textAnchor="middle" fill="#fecaca" fontSize={9} className="mono">COLLAPSED → |dead⟩ · DECAY DETECTED</text>}
+                  {phase==='dead' && <text x={248} y={302} textAnchor="middle" fill="#fecaca" fontSize={9} className="mono">COLLAPSED → |dead⟩ · WORLD BURNS 🔥</text>}
                   {/* coupling */}
                   <path d="M108 168 V190" stroke="#a78bfa" strokeWidth={1} strokeDasharray="5 4" opacity={0.6} />
                   <path d="M456 144 V190" stroke={phase==='dead' ? '#ef4444' : '#10b981'} strokeWidth={1} strokeDasharray="5 4" opacity={0.65} />
