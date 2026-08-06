@@ -318,11 +318,36 @@ function Home() {
     const sx=(clientX-rect.left)/rect.width, sy=(clientY-rect.top)/rect.height
     return { x: viewX + sx*vbW, y: viewY + sy*vbH }
   }
+  const wrapRef = React.useRef(null)
+  React.useEffect(()=>{
+    const el = wrapRef.current
+    if(!el) return
+    // fully zoomed: lock scroll, capture all keys, prevent browser scroll
+    const prevent = e => { if(['ArrowUp','ArrowDown','ArrowLeft','ArrowRight',' ','Space'].includes(e.key) || e.key.startsWith('Arrow')) e.preventDefault() }
+    const onWheel = e => e.preventDefault()
+    // lock body scroll while mounted
+    const prevOverflow = document.body.style.overflow
+    const prevOverscroll = document.documentElement.style.overscrollBehavior
+    document.body.style.overflow = 'hidden'
+    document.documentElement.style.overscrollBehavior = 'none'
+    window.addEventListener('keydown', prevent, {passive:false})
+    window.addEventListener('wheel', onWheel, {passive:false})
+    window.addEventListener('touchmove', onWheel, {passive:false})
+    // focus so key events go here
+    el.focus()
+    return ()=>{
+      document.body.style.overflow = prevOverflow
+      document.documentElement.style.overscrollBehavior = prevOverscroll
+      window.removeEventListener('keydown', prevent)
+      window.removeEventListener('wheel', onWheel)
+      window.removeEventListener('touchmove', onWheel)
+    }
+  },[])
   return (
-    <div style={{margin:'-24px -24px 0', background:PALETTE.paper, color:PALETTE.ink, minHeight:'calc(100vh - 72px)', position:'relative', overflow:'hidden', filter:'sepia(0.38) saturate(0.82)'}}>
-      <style>{`@keyframes drift{from{transform:translateX(-240px)}to{transform:translateX(2640px)}} @keyframes flash{0%,49%{fill:#9A8E7A}50%,100%{fill:#7E8FA3}} .flash{animation:flash 0.28s steps(1) infinite} .ink{stroke:#0A0A0B; stroke-linecap:round; stroke-linejoin:round} @keyframes bob{0%,100%{transform:translateY(0)}50%{transform:translateY(-2px)}}`}</style>
+    <div ref={wrapRef} tabIndex={0} onKeyDown={e=>{ if(e.key==='Enter' || e.key===' ') { e.preventDefault(); const h=LOCS.find(l=>l.id===active); if(h?.href) window.location.href=h.href } }} style={{margin:'-24px -24px 0', background:PALETTE.paper, color:PALETTE.ink, height:'100dvh', minHeight:'100dvh', position:'relative', overflow:'hidden', filter:'sepia(0.38) saturate(0.82)', outline:'none'}} onWheel={e=>e.preventDefault()}>
+      <style>{`html,body{overscroll-behavior:none} @keyframes drift{from{transform:translateX(-240px)}to{transform:translateX(2640px)}} @keyframes flash{0%,49%{fill:#9A8E7A}50%,100%{fill:#7E8FA3}} .flash{animation:flash 0.28s steps(1) infinite} .ink{stroke:#0A0A0B; stroke-linecap:round; stroke-linejoin:round} @keyframes bob{0%,100%{transform:translateY(0)}50%{transform:translateY(-2px)}}`}</style>
       {edge && <div style={{position:'absolute', inset:0, zIndex:20, display:'flex', alignItems:'center', justifyContent:'center', background:'rgba(10,10,11,0.78)', color:'#F5EED8', fontFamily:'JetBrains Mono,monospace', fontSize:20, letterSpacing:5}}>EDGE → AVERY…</div>}
-      <svg viewBox={`${viewX} ${viewY} ${vbW} ${vbH}`} style={{width:'100%', height:'calc(100vh - 72px)', display:'block'}} onClick={e=>{
+      <svg viewBox={`${viewX} ${viewY} ${vbW} ${vbH}`} style={{width:'100%', height:'100dvh', display:'block'}} onClick={e=>{
         const r=e.currentTarget.getBoundingClientRect()
         const w=toWorld(e.clientX,e.clientY,r)
         setPos({x:Math.max(24,Math.min(WORLD.w-24,w.x)), y:Math.max(24,Math.min(WORLD.h-24,w.y))})
