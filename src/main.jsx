@@ -72,15 +72,15 @@ function Avery() {
   return (
     <Layout title="">
       <style>{`
-        @import url('https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;600;700&family=JetBrains+Mono:wght@400;600&display=swap');
-        .avery-root{font-family:'Space Grotesk',system-ui,sans-serif; color:#e2e8f0; margin:-1rem -1rem 0; padding:0; overflow:hidden; border-radius:16px; background:#020617; position:relative}
-        .avery-bg{position:absolute; inset:0; background:
+        .avery-root{font-family:-apple-system,BlinkMacSystemFont,'SF Pro Display','Space Grotesk',system-ui,sans-serif; color:#e2e8f0; margin:-1rem -1rem 0; padding:0; overflow:hidden; border-radius:16px; background:#020617; position:relative}
+        .avery-bg{position:absolute; top:0; left:0; right:0; bottom:0; background:
           radial-gradient(600px 400px at 20% 10%, rgba(236,72,153,0.28), transparent 60%),
           radial-gradient(800px 500px at 90% 90%, rgba(6,182,212,0.22), transparent 60%),
           radial-gradient(500px 500px at 50% 50%, rgba(139,92,246,0.18), transparent 70%),
           linear-gradient(180deg,#020617 0%, #0f172a 100%); z-index:0}
-        .avery-grid{position:absolute; inset:0; opacity:0.08; background-image: linear-gradient(rgba(255,255,255,0.12) 1px, transparent 1px), linear-gradient(90deg, rgba(255,255,255,0.12) 1px, transparent 1px); background-size:40px 40px; z-index:0}
-        .glass{backdrop-filter:blur(16px) saturate(1.4); -webkit-backdrop-filter:blur(16px) saturate(1.4); background:rgba(255,255,255,0.07); border:1px solid rgba(255,255,255,0.12); box-shadow: 0 8px 40px rgba(0,0,0,0.45), inset 0 1px 0 rgba(255,255,255,0.15)}
+        .avery-grid{position:absolute; top:0; left:0; right:0; bottom:0; opacity:0.08; background-image: linear-gradient(rgba(255,255,255,0.12) 1px, transparent 1px), linear-gradient(90deg, rgba(255,255,255,0.12) 1px, transparent 1px); background-size:40px 40px; z-index:0}
+        .glass{-webkit-backdrop-filter:blur(16px) saturate(1.4); backdrop-filter:blur(16px) saturate(1.4); background:rgba(255,255,255,0.07); border:1px solid rgba(255,255,255,0.12); box-shadow: 0 8px 40px rgba(0,0,0,0.45), inset 0 1px 0 rgba(255,255,255,0.15)}
+        @supports not ((-webkit-backdrop-filter: blur(1px)) or (backdrop-filter: blur(1px))) { .glass{ background:rgba(15,23,42,0.85) } }
         .neon{box-shadow: 0 0 12px rgba(236,72,153,0.6), 0 0 32px rgba(6,182,212,0.35), inset 0 0 12px rgba(255,255,255,0.08)}
         .mono{font-family:'JetBrains Mono',monospace}
         @keyframes shimmer{0%{background-position:-200% 0}100%{background-position:200% 0}}
@@ -178,7 +178,7 @@ function Avery() {
                   <text x={36} y={206} fill="#e2e8f0" fontSize={9} className="mono">CAT CHAMBER · SEALED · NO DECOHERENCE UNTIL MEASURED</text>
                   {/* cat */}
                   <text x={248} y={278} textAnchor="middle" fontSize={phase==='superposed' ? 56 : 68} style={{ filter: phase==='superposed' ? 'blur(0.3px) brightness(1.1)' : '', opacity: phase==='superposed' ? 0.92 : 1, transition: 'all 0.4s' }}>
-                    {phase==='superposed' ? '🐱‍👓' : phase==='alive' ? '😸' : phase==='dead' ? '😵' : '📦'}
+                    {phase==='superposed' ? '🐱' : phase==='alive' ? '😸' : phase==='dead' ? '😵' : '📦'}
                   </text>
                   {phase==='superposed' && (
                     <>
