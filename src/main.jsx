@@ -258,9 +258,7 @@ function OneOverF() {
 
 function Home() {
   const PALETTE = { sepia:'#9A8E7A', sepiaDark:'#6B6254', sepiaLight:'#C2B8A3', blueSepia:'#7E8FA3', sea:'#8E9EAC', paper:'#E8E0C8', ink:'#0A0A0B' }
-  // Wide world — far and wide, Codex can hook HOOK_* regions later
   const WORLD = { w: 2400, h: 1600 }
-  // Story: an archipelago that was once the Esprit — you wander between memory-islands
   const LOCS = [
     { id:'kenton', label:'CABIN', sub:'KENTON', href:'/kenton', x:420, y:520, w:148, h:112, lore:'Where Kenton keeps the signal logs. The heater still ticks.' },
     { id:'store', label:'STORE', sub:'LINKS', href:'/links', x:760, y:420, w:132, h:108, lore:'A general store that sells other peoples websites.' },
@@ -268,7 +266,6 @@ function Home() {
     { id:'code', label:'MILL', sub:'CODE', href:'/code', x:620, y:780, w:136, h:102, lore:'The code mill — sawdust and shipped features.' },
     { id:'contact', label:'POST', sub:'CONTACT', href:'/contact', x:980, y:820, w:110, h:82, lore:'Post office. Write a letter, it might arrive.' },
     { id:'more', label:'SHED', sub:'MORE', href:'/more', x:1450, y:620, w:96, h:78, lore:'A shed that is bigger inside.' },
-    // HOOK points for Codex — empty lots with ids, liven later
     { id:'hook_north', label:'NORTH LOT', sub:'HOOK_NORTH', href:null, x:520, y:220, w:110, h:80, hook:true, lore:'Reserved — Codex: add a lighthouse / observatory here.' },
     { id:'hook_east', label:'EAST LOT', sub:'HOOK_EAST', href:null, x:1750, y:740, w:120, h:90, hook:true, lore:'Reserved — Codex: add a dock / fishing game here.' },
     { id:'hook_south', label:'SOUTH LOT', sub:'HOOK_SOUTH', href:null, x:900, y:1180, w:130, h:90, hook:true, lore:'Reserved — Codex: add a cave / archive here.' },
@@ -322,10 +319,8 @@ function Home() {
   React.useEffect(()=>{
     const el = wrapRef.current
     if(!el) return
-    // fully zoomed: lock scroll, capture all keys, prevent browser scroll
     const prevent = e => { if(['ArrowUp','ArrowDown','ArrowLeft','ArrowRight',' ','Space'].includes(e.key) || e.key.startsWith('Arrow')) e.preventDefault() }
     const onWheel = e => e.preventDefault()
-    // lock body scroll while mounted
     const prevOverflow = document.body.style.overflow
     const prevOverscroll = document.documentElement.style.overscrollBehavior
     document.body.style.overflow = 'hidden'
@@ -333,7 +328,6 @@ function Home() {
     window.addEventListener('keydown', prevent, {passive:false})
     window.addEventListener('wheel', onWheel, {passive:false})
     window.addEventListener('touchmove', onWheel, {passive:false})
-    // focus so key events go here
     el.focus()
     return ()=>{
       document.body.style.overflow = prevOverflow
@@ -375,8 +369,7 @@ function Home() {
           const s= 999 + i*  137; const x= 180 + (s*  73 % 2100), y= 260 + (s*  41 % 900)
           const inIsland = Math.pow((x-900)/680,2)+Math.pow((y-600)/390,2) < 1
           if(!inIsland) return null
-          // skip near buildings
-          if(LOCS.some(l=> Math.hypot(x-(l.x+l.w/2), y-(l.y+l.h/2))<90)) return null
+            if(LOCS.some(l=> Math.hypot(x-(l.x+l.w/2), y-(l.y+l.h/2))<90)) return null
           return <g key={i}><rect x={x-4} y={y} width="7" height="16" fill="#6B6254" className="ink" strokeWidth="1.7"/><circle cx={x} cy={y-8} r="16" fill="#9A8E7A" className="ink" strokeWidth="2"/><circle cx={x-7} cy={y-2} r="10" fill="#C2B8A3" className="ink" strokeWidth="1.6"/></g>
         })}
         {/* paths - dotted */}

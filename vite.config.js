@@ -6,5 +6,14 @@ export default defineConfig({
   build: {
     outDir: 'docs',
     emptyOutDir: false,
+    chunkSizeWarningLimit: 600,
+    rollupOptions: {
+      output: {
+        manualChunks: {
+          three: ['three'],
+          react: ['react', 'react-dom', 'react-router-dom'],
+        },
+      },
+    },
   },
 })
