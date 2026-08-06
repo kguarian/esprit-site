@@ -45,14 +45,21 @@ function PlanetNuke() {
     const earth = new THREE.Mesh(earthGeo, earthMat); scene.add(earth)
     // atmosphere glow
     const atmo = new THREE.Mesh(new THREE.SphereGeometry(1.12, 64, 64), new THREE.MeshBasicMaterial({ color: 0x60a5fa, transparent: true, opacity: 0.12, side: THREE.BackSide })); scene.add(atmo)
-    // nuke fire shell enveloping planet (hyperreal)
-    const fireGeo = new THREE.SphereGeometry(1.18, 64, 64)
-    const fireMat = new THREE.MeshBasicMaterial({ color: 0xff6b35, transparent: true, opacity: 0.55 })
-    const fire = new THREE.Mesh(fireGeo, fireMat); fire.scale.set(1, 0.85, 1); scene.add(fire)
-    const fire2 = new THREE.Mesh(new THREE.SphereGeometry(1.28, 64, 64), new THREE.MeshBasicMaterial({ color: 0xef4444, transparent: true, opacity: 0.28, side: THREE.BackSide })); scene.add(fire2)
-    // shockwave ring
-    const ring = new THREE.Mesh(new THREE.RingGeometry(1.35, 1.42, 64), new THREE.MeshBasicMaterial({ color: 0xfde68a, transparent: true, opacity: 0.45, side: THREE.DoubleSide })); ring.rotation.x = Math.PI/2; ring.position.y = -0.15; scene.add(ring)
-    const ring2 = new THREE.Mesh(new THREE.RingGeometry(1.55, 1.6, 64), new THREE.MeshBasicMaterial({ color: 0xfb923c, transparent: true, opacity: 0.22, side: THREE.DoubleSide })); ring2.rotation.x = Math.PI/2; ring2.position.y = -0.12; scene.add(ring2)
+    // mushroom cloud enveloping planet — hyperreal, obvious
+    const capGeo = new THREE.SphereGeometry(1.45, 64, 32, 0, Math.PI*2, 0, Math.PI*0.38)
+    const capMat = new THREE.MeshStandardMaterial({ color: 0xff6b35, emissive: 0x7c2d12, emissiveIntensity: 0.9, roughness: 0.9, transparent: true, opacity: 0.92 })
+    const cap = new THREE.Mesh(capGeo, capMat); cap.position.y = 0.95; cap.rotation.x = Math.PI; scene.add(cap)
+    const cap2 = new THREE.Mesh(new THREE.SphereGeometry(1.32, 64, 32, 0, Math.PI*2, 0, Math.PI*0.42), new THREE.MeshStandardMaterial({ color: 0xef4444, emissive: 0x450a0a, emissiveIntensity: 0.7, transparent: true, opacity: 0.55 })); cap2.position.y = 0.88; cap2.rotation.x = Math.PI; scene.add(cap2)
+    const stemGeo = new THREE.CylinderGeometry(0.22, 0.55, 1.9, 32)
+    const stemMat = new THREE.MeshStandardMaterial({ color: 0x7c2d12, emissive: 0xff6b35, emissiveIntensity: 0.6, transparent: true, opacity: 0.88 })
+    const stem = new THREE.Mesh(stemGeo, stemMat); stem.position.y = 0.15; scene.add(stem)
+    // fire shell for global burn (subtle under mushroom)
+    const fire = new THREE.Mesh(new THREE.SphereGeometry(1.18, 64, 64), new THREE.MeshBasicMaterial({ color: 0xff6b35, transparent: true, opacity: 0.28 })); fire.scale.set(1, 0.85, 1); scene.add(fire)
+    const fire2 = new THREE.Mesh(new THREE.SphereGeometry(1.35, 64, 64), new THREE.MeshBasicMaterial({ color: 0x450a0a, transparent: true, opacity: 0.35, side: THREE.BackSide })); scene.add(fire2)
+    // shockwave — more obvious
+    const ring = new THREE.Mesh(new THREE.RingGeometry(1.5, 1.62, 64), new THREE.MeshBasicMaterial({ color: 0xfde68a, transparent: true, opacity: 0.65, side: THREE.DoubleSide })); ring.rotation.x = Math.PI/2; ring.position.y = -0.15; scene.add(ring)
+    const ring2 = new THREE.Mesh(new THREE.RingGeometry(1.75, 1.85, 64), new THREE.MeshBasicMaterial({ color: 0xfb923c, transparent: true, opacity: 0.32, side: THREE.DoubleSide })); ring2.rotation.x = Math.PI/2; ring2.position.y = -0.12; scene.add(ring2)
+    const ring3 = new THREE.Mesh(new THREE.RingGeometry(2.0, 2.08, 64), new THREE.MeshBasicMaterial({ color: 0xef4444, transparent: true, opacity: 0.18, side: THREE.DoubleSide })); ring3.rotation.x = Math.PI/2; ring3.position.y = -0.1; scene.add(ring3)
     // lights
     scene.add(new THREE.AmbientLight(0xffffff, 0.6))
     const sun = new THREE.DirectionalLight(0xffffff, 1.2); sun.position.set(5, 3, 5); scene.add(sun)
@@ -61,10 +68,10 @@ function PlanetNuke() {
     const starGeo = new THREE.BufferGeometry(); const starPos = new Float32Array(600); for(let i=0;i<600;i++) starPos[i]=(Math.random()-0.5)*20; starGeo.setAttribute('position', new THREE.BufferAttribute(starPos,3)); const stars=new THREE.Points(starGeo, new THREE.PointsMaterial({color:0xffffff, size:0.02})); scene.add(stars)
     let raf; const animate=()=>{
       raf=requestAnimationFrame(animate)
-      earth.rotation.y+=0.0012; fire.rotation.y+=0.0018; fire2.rotation.y-=0.001; atmo.rotation.y+=0.0008
-      fire.material.opacity=0.52 + Math.sin(Date.now()*0.003)*0.08
-      fireLight.intensity=7 + Math.sin(Date.now()*0.004)*2
-      ring.scale.setScalar(1 + Math.sin(Date.now()*0.0015)*0.04)
+      earth.rotation.y+=0.0012; cap.rotation.y+=0.003; cap2.rotation.y-=0.002; stem.rotation.y+=0.001; fire.rotation.y+=0.0018; fire2.rotation.y-=0.001; atmo.rotation.y+=0.0008
+      cap.material.opacity=0.88 + Math.sin(Date.now()*0.002)*0.06
+      fireLight.intensity=8 + Math.sin(Date.now()*0.003)*3
+      ring.scale.setScalar(1 + Math.sin(Date.now()*0.0012)*0.06); ring2.scale.setScalar(1 + Math.sin(Date.now()*0.0015)*0.04)
       renderer.render(scene,camera)
     }; animate()
     window.addEventListener('resize', resize)
