@@ -31,13 +31,123 @@ function Layout({ title, children }) {
 function Home() { return <Layout title="Home"><p>Welcome. This is the starter React scaffold.</p></Layout> }
 function Kenton() {
   return (
-    <Layout title="Kenton — Work">
-      <p>Projects and work index — curated list of builds, research, and shipped work.</p>
-      <ul>
-        <li><strong>Signal research</strong> — data · modeling · evaluation</li>
-        <li><strong>Software</strong> — tools and internal systems</li>
-        <li><strong>Writing</strong> — notes and longer-form work</li>
-      </ul>
+    <Layout title="">
+      <style>{`
+        .kenton-wrap{margin:0 -24px; padding:0; background:#f8fafc}
+        .kenton-hero{position:relative; overflow:hidden; background:
+          radial-gradient(900px 520px at 12% 0%, rgba(99,102,241,0.16), transparent 62%),
+          radial-gradient(760px 520px at 96% 18%, rgba(14,165,233,0.14), transparent 62%),
+          linear-gradient(180deg,#ffffff 0%, #f1f5f9 100%); border-bottom:1px solid #e2e8f0}
+        .kenton-shell{max-width:1180px; margin:0 auto; padding:32px 24px 0; position:relative}
+        .kenton-grid{max-width:1180px; margin:0 auto; padding:20px 24px 32px; display:grid; grid-template-columns: 1.15fr 0.85fr; gap:18px}
+        .kglass{-webkit-backdrop-filter:blur(14px) saturate(1.2); backdrop-filter:blur(14px) saturate(1.2); background:rgba(255,255,255,0.94); border:1px solid rgba(15,23,42,0.07); box-shadow:0 8px 28px rgba(15,23,42,0.07)}
+        .mono{font-family:'JetBrains Mono',ui-monospace,monospace}
+        @media(max-width:900px){ .kenton-grid{grid-template-columns:1fr} }
+      `}</style>
+      <div className="kenton-wrap">
+        <div className="kenton-hero">
+          <div className="kenton-shell">
+            <div style={{ display:'grid', gridTemplateColumns:'1.15fr 0.85fr', gap:28, alignItems:'center', padding:'8px 0 28px' }}>
+              <div>
+                <div className="mono" style={{ fontSize:11, letterSpacing:3, color:'#6366f1', fontWeight:700 }}>KENTON GUARIAN — SAN DIEGO · UCSD MATH-CS</div>
+                <div style={{ fontSize:'clamp(30px,3.6vw,42px)', fontWeight:800, letterSpacing:'-0.04em', lineHeight:1.05, marginTop:8, color:'#0f172a' }}>
+                  Data · software ·<br /><span style={{ background:'linear-gradient(90deg,#6366f1,#06b6d4)', WebkitBackgroundClip:'text', WebkitTextFillColor:'transparent' }}>signal research.</span>
+                </div>
+                <p style={{ fontSize:15, color:'#475569', lineHeight:1.65, marginTop:14, maxWidth:560 }}>
+                  Mathematics-Computer Science, UC San Diego (Dec 2023) — Voytek Lab alum, Machine Learning Engineer in Cognitive Science. Built deep nets for brain signals at <strong>98% accuracy</strong>, patent-pending heart-signal parametrization (<strong>1000× faster</strong>), and secure data platforms that cut costs $3k/yr and lifted efficiency 30%. Published in <em>Oxford SLEEP</em> & <em>Alzheimer’s & Dementia</em>.
+                </p>
+                <div style={{ display:'flex', gap:10, marginTop:16, flexWrap:'wrap' }}>
+                  <a href="mailto:Kenton.Guarian@gmail.com" className="mono" style={{ padding:'11px 16px', borderRadius:999, textDecoration:'none', fontWeight:700, fontSize:13, background:'#0f172a', color:'#fff' }}>Kenton.Guarian@gmail.com</a>
+                  <a href="tel:6195506378" className="mono kglass" style={{ padding:'11px 16px', borderRadius:999, textDecoration:'none', color:'#0f172a', fontWeight:600, fontSize:13 }}>(619) 550-6378</a>
+                  <a href="https://voyteklab.com/members" target="_blank" rel="noreferrer" className="mono" style={{ fontSize:11, alignSelf:'center', color:'#6366f1' }}>Voytek Lab ↗</a>
+                </div>
+              </div>
+              <div style={{ position:'relative' }}>
+                <div className="kglass" style={{ borderRadius:20, overflow:'hidden', position:'relative' }}>
+                  <img src="https://images.unsplash.com/photo-1507413245164-6160d8298b31?w=900&q=80&auto=format&fit=crop" alt="Oscilloscope signals — neural oscillations" style={{ width:'100%', height:320, objectFit:'cover', display:'block' }} loading="lazy" />
+                  <div style={{ position:'absolute', bottom:10, left:10, right:10, display:'flex', gap:8, flexWrap:'wrap' }}>
+                    <span className="kglass mono" style={{ fontSize:10, padding:'6px 10px', borderRadius:999 }}>NEURAL OSCILLATIONS</span>
+                    <span className="kglass mono" style={{ fontSize:10, padding:'6px 10px', borderRadius:999 }}>SPECTRAL ANALYSIS · FFT</span>
+                  </div>
+                </div>
+                <div className="kglass" style={{ position:'absolute', bottom:-16, left:-8, borderRadius:14, padding:'10px 12px', display:'flex', gap:10, alignItems:'center', maxWidth:280 }}>
+                  <img src="https://images.unsplash.com/photo-1523050854058-8df90110c9f1?w=300&q=80&auto=format&fit=crop" alt="UC San Diego Geisel" style={{ width:54, height:54, borderRadius:10, objectFit:'cover' }} loading="lazy" />
+                  <div><div style={{ fontWeight:700, fontSize:13 }}>UC San Diego</div><div className="mono" style={{ fontSize:10, color:'#64748b' }}>B.S. Math-CS · Provost Honors · PATHS/Golden Pyramid</div></div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div className="kenton-grid">
+          <div style={{ display:'flex', flexDirection:'column', gap:16 }}>
+            <div className="kglass" style={{ borderRadius:16, padding:16 }}>
+              <div className="mono" style={{ fontSize:10, letterSpacing:2, color:'#6366f1' }}>EXPERIENCE</div>
+              <div style={{ marginTop:12, borderLeft:'2px solid #e2e8f0', paddingLeft:14, display:'flex', flexDirection:'column', gap:14 }}>
+                <div>
+                  <div style={{ fontWeight:700 }}>Machine Learning Engineer — UC San Diego, CogSci (Voytek Lab)</div>
+                  <div className="mono" style={{ fontSize:11, color:'#64748b' }}>Mar 2021 – Present · La Jolla</div>
+                  <ul style={{ margin:'6px 0 0', paddingLeft:16, fontSize:13, color:'#334155', lineHeight:1.6 }}>
+                    <li>Deep net for brain signals — <strong>98% accuracy</strong>, new benchmark</li>
+                    <li>Patent-pending heart-signal parametrization — <strong>1000×</strong> speedup</li>
+                    <li>Secure data collection platform — +30% efficiency, −$3k/yr</li>
+                    <li>Published in <em>SLEEP</em> & <em>Alzheimer’s & Dementia</em></li>
+                  </ul>
+                </div>
+                <div>
+                  <div style={{ fontWeight:700 }}>Software Engineer — Mechanical Music Digest</div>
+                  <div className="mono" style={{ fontSize:11, color:'#64748b' }}>Oct 2020 – Mar 2021 · San Diego</div>
+                  <ul style={{ margin:'6px 0 0', paddingLeft:16, fontSize:13, color:'#334155', lineHeight:1.6 }}>
+                    <li>AI behavioral monitoring, automated compliance, newsletter distribution, VirtualDJ extensions</li>
+                  </ul>
+                </div>
+                <div>
+                  <div style={{ fontWeight:700 }}>Front-End Developer — UC San Diego, CSE</div>
+                  <div className="mono" style={{ fontSize:11, color:'#64748b' }}>Jun – Sep 2021</div>
+                  <ul style={{ margin:'6px 0 0', paddingLeft:16, fontSize:13, color:'#334155' }}><li>Serverless code execution — 100% infra cost reduction</li></ul>
+                </div>
+              </div>
+            </div>
+            <div className="kglass" style={{ borderRadius:16, padding:16 }}>
+              <div className="mono" style={{ fontSize:10, letterSpacing:2, color:'#6366f1' }}>TECHNICAL SKILLS</div>
+              <div style={{ display:'flex', gap:6, flexWrap:'wrap', marginTop:10 }}>
+                {['Python','SQL','JavaScript','Go','Java','C++','PyTorch','NumPy','Pandas','Scikit-Learn','Jupyter','DNNs','DSP','Systems Programming','API Design'].map(s=>(
+                  <span key={s} className="mono" style={{ fontSize:11, padding:'6px 10px', borderRadius:999, background:'#f1f5f9', border:'1px solid #e2e8f0' }}>{s}</span>
+                ))}
+              </div>
+            </div>
+          </div>
+          <div style={{ display:'flex', flexDirection:'column', gap:16 }}>
+            <div className="kglass" style={{ borderRadius:16, overflow:'hidden' }}>
+              <img src="https://images.unsplash.com/photo-1551288049-bebda4e38f71?w=900&q=80&auto=format&fit=crop" alt="Data charts and trading" style={{ width:'100%', height:150, objectFit:'cover' }} loading="lazy" />
+              <div style={{ padding:14 }}>
+                <div style={{ fontWeight:700 }}>Selected Projects</div>
+                <ul style={{ margin:'6px 0 0', paddingLeft:16, fontSize:13, color:'#475569', lineHeight:1.6 }}>
+                  <li>Brain Monitoring — ML predicts mental exercise</li>
+                  <li>CS Education — browser code execution platform</li>
+                  <li>Optimized Stock Portfolio — linear algebra</li>
+                  <li>Music Analytics — listening records & analytics</li>
+                </ul>
+              </div>
+            </div>
+            <div className="kglass" style={{ borderRadius:16, overflow:'hidden' }}>
+              <img src="https://images.unsplash.com/photo-1507537297725-24a1c029d3ca?w=900&q=80&auto=format&fit=crop" alt="La Jolla coast, San Diego" style={{ width:'100%', height:150, objectFit:'cover' }} loading="lazy" />
+              <div style={{ padding:12 }}>
+                <div style={{ fontWeight:700, fontSize:14 }}>San Diego · La Jolla</div>
+                <div style={{ fontSize:12, color:'#64748b' }}>UC San Diego Math-CS — Data Science, Neural Data Science, Stats, Algorithms</div>
+                <div style={{ marginTop:8, display:'flex', gap:8 }}>
+                  <a href="/ml" style={{ fontSize:12, fontWeight:700, color:'#6366f1', textDecoration:'none' }}>ML →</a>
+                  <a href="/code" style={{ fontSize:12, color:'#475569', textDecoration:'none' }}>Code →</a>
+                  <a href="https://today.ucsd.edu/story/new-studies-of-brain-activity-explain-benefits-of-electroconvulsive-therapy" target="_blank" rel="noreferrer" style={{ fontSize:11, color:'#94a3b8' }}>Voytek story ↗</a>
+                </div>
+              </div>
+            </div>
+            <div className="kglass mono" style={{ borderRadius:16, padding:12, fontSize:11, color:'#64748b', display:'flex', gap:8, flexWrap:'wrap' }}>
+              <span>📄 Resumes in repo root</span><span>·</span><span>Highly recommended by Prof. Brad Voytek (voytek@ucsd.edu)</span>
+            </div>
+          </div>
+        </div>
+      </div>
     </Layout>
   )
 }
