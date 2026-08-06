@@ -54,7 +54,7 @@ function Kenton() {
                   Data · software ·<br /><span style={{ background:'linear-gradient(90deg,#6366f1,#06b6d4)', WebkitBackgroundClip:'text', WebkitTextFillColor:'transparent' }}>signal research.</span>
                 </div>
                 <p style={{ fontSize:15, color:'#475569', lineHeight:1.65, marginTop:14, maxWidth:560 }}>
-                  Mathematics-Computer Science, UC San Diego (Dec 2023) — Voytek Lab alum, Machine Learning Engineer in Cognitive Science. Built deep nets for brain signals at <strong>98% accuracy</strong>, patent-pending heart-signal parametrization (<strong>1000× faster</strong>), and secure data platforms that cut costs $3k/yr and lifted efficiency 30%. Published in <em>Oxford SLEEP</em> & <em>Alzheimer’s & Dementia</em>.
+                  Mathematics-Computer Science, UC San Diego (Dec 2023) — Voytek Lab alum, Machine Learning Engineer in Cognitive Science. Built deep nets for brain signals at <strong>98% accuracy</strong>, patent-pending heart-signal parametrization (<strong>1000× faster</strong>), and secure data platforms that cut costs $3k/yr and lifted efficiency 30%. Published: <em>Sleep breathing patterns and neurocognitive function in a diverse Hispanic/Latino cohort</em> — <em>Alzheimer's & Dementia</em> (2023) <a href="https://doi.org/10.1002/alz.074342" target="_blank" rel="noreferrer" style="color:#6366f1">doi:10.1002/alz.074342 ↗</a>.
                 </p>
                 <div style={{ display:'flex', gap:10, marginTop:16, flexWrap:'wrap' }}>
                   <a href="mailto:Kenton.Guarian@gmail.com" className="mono" style={{ padding:'11px 16px', borderRadius:999, textDecoration:'none', fontWeight:700, fontSize:13, background:'#0f172a', color:'#fff' }}>Kenton.Guarian@gmail.com</a>
@@ -91,7 +91,7 @@ function Kenton() {
                     <li>Deep net for brain signals — <strong>98% accuracy</strong>, new benchmark</li>
                     <li>Patent-pending heart-signal parametrization — <strong>1000×</strong> speedup</li>
                     <li>Secure data collection platform — +30% efficiency, −$3k/yr</li>
-                    <li>Published in <em>SLEEP</em> & <em>Alzheimer’s & Dementia</em></li>
+                    <li><em>Alzheimer's & Dementia</em> 2023 — Sleep breathing patterns (co-author) — <a href="https://doi.org/10.1002/alz.074342" target="_blank" rel="noreferrer" style="color:#6366f1">doi:10.1002/alz.074342</a></li>
                   </ul>
                 </div>
                 <div>
@@ -138,7 +138,7 @@ function Kenton() {
                 <div style={{ marginTop:8, display:'flex', gap:8 }}>
                   <a href="/ml" style={{ fontSize:12, fontWeight:700, color:'#6366f1', textDecoration:'none' }}>ML →</a>
                   <a href="/code" style={{ fontSize:12, color:'#475569', textDecoration:'none' }}>Code →</a>
-                  <a href="https://today.ucsd.edu/story/new-studies-of-brain-activity-explain-benefits-of-electroconvulsive-therapy" target="_blank" rel="noreferrer" style={{ fontSize:11, color:'#94a3b8' }}>Voytek story ↗</a>
+                  <a href="https://doi.org/10.1002/alz.074342" target="_blank" rel="noreferrer" style={{ fontSize:11, color:'#94a3b8' }}>Alzheimer's & Dementia (2023) ↗</a>
                 </div>
               </div>
             </div>
