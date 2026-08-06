@@ -13,7 +13,6 @@ function Layout({ title, children }) {
       <nav>
         <Link to="/">Home</Link>
         <Link to="/kenton">Kenton</Link>
-        <Link to="/avery">Avery</Link>
         <Link to="/ml">ML</Link>
         <Link to="/code">Code</Link>
         <Link to="/links">Links</Link>
