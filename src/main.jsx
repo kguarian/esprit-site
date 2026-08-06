@@ -257,210 +257,115 @@ function OneOverF() {
 }
 
 function Home() {
-  // Cornsweeper-inspired playable homepage — the nav IS the game
-  const ROWS = 10, COLS = 16
-  const THEMES = {
-    kenton: { label:'KENTON', icon:'◈', href:'/kenton', color:'#6366f1', bg:'#eef2ff', desc:'Data · signal · resume' },
-    ml: { label:'ML LAB', icon:'⬢', href:'/ml', color:'#06b6d4', bg:'#ecfeff', desc:'SPY/NVDA 17-feat MLP' },
-    avery: { label:'AVERY', icon:'🐱', href:'/avery', color:'#ec4899', bg:'#fdf2f8', desc:'Schrödinger protocol' },
-    code: { label:'CODE', icon:'▣', href:'/code', color:'#10b981', bg:'#ecfdf5', desc:'Projects' },
-    links: { label:'LINKS', icon:'↗', href:'/links', color:'#f59e0b', bg:'#fffbeb', desc:'Elsewhere' },
-    contact: { label:'CONTACT', icon:'✉', href:'/contact', color:'#8b5cf6', bg:'#f5f3ff', desc:'Say hi' },
-  }
-  const THEME_KEYS = Object.keys(THEMES)
-  // seeded board so it's stable per load
-  const board = React.useMemo(()=>{
-    let s=1337; const rnd=()=>((s=s*16807%2147483647)-1)/2147483646
-    const cells = Array(ROWS*COLS).fill(0).map((_,i)=>{
-      const r=Math.floor(i/COLS), c=i%COLS
-      const isTreasure = rnd()<0.075
-      const isTrap = !isTreasure && rnd()<0.11
-      const theme = isTreasure ? THEME_KEYS[Math.floor(rnd()*THEME_KEYS.length)] : null
-      return { r,c, isTrap, isTreasure, theme, revealed:false, flagged:false, adj:0 }
-    })
-    // compute adjacency trap counts
-    cells.forEach(cell=>{
-      let n=0
-      for(let dr=-1;dr<=1;dr++) for(let dc=-1;dc<=1;dc++){
-        if(!dr&&!dc) continue
-        const nr=cell.r+dr,nc=cell.c+dc
-        if(nr>=0&&nr<ROWS&&nc>=0&&nc<COLS&&cells[nr*COLS+nc].isTrap) n++
-      }
-      cell.adj=n
-    })
-    // ensure first click area safe: clear traps around center
-    const cx=Math.floor(COLS/2), cy=Math.floor(ROWS/2)
-    for(let dr=-1;dr<=1;dr++) for(let dc=-1;dc<=1;dc++){
-      const c=cells[(cy+dr)*COLS+(cx+dc)]
-      if(c) c.isTrap=false
-    }
-    return cells
-  },[])
-  const [revealed, setRevealed] = React.useState(()=> new Set())
-  const [flagged, setFlagged] = React.useState(()=> new Set())
-  const [gameOver, setGameOver] = React.useState(false)
-  const [won, setWon] = React.useState(false)
-  const [moves, setMoves] = React.useState(0)
-  const [found, setFound] = React.useState([]) // theme keys found
-  const [shake, setShake] = React.useState(null)
-  const [konami, setKonami] = React.useState(false)
-  const totalTreasures = React.useMemo(()=> board.filter(c=>c.isTreasure).length, [board])
-
+  const PALETTE = { sepia:'#9A8E7A', sepiaDark:'#6B6254', sepiaLight:'#C2B8A3', blueSepia:'#7E8FA3', sea:'#8E9EAC', ink:'#0A0A0B' }
+  const LOCS = [
+    { id:'kenton', label:'CABIN', sub:'KENTON', href:'/kenton', x:180, y:320, w:132, h:104 },
+    { id:'store', label:'STORE', sub:'LINKS / CODE', href:'/links', x:390, y:268, w:120, h:102 },
+    { id:'theatre', label:'THEATRE', sub:'ML LAB', href:'/ml', x:620, y:312, w:138, h:110 },
+    { id:'contact', label:'POST', sub:'CONTACT', href:'/contact', x:500, y:448, w:104, h:76 },
+    { id:'more', label:'SHED', sub:'MORE', href:'/more', x:780, y:398, w:86, h:68 },
+  ]
+  const navigate = (h)=>{ window.location.hash=h; window.location.href=h }
+  // use react-router navigate if available via window
+  const [pos,setPos]=React.useState({x:500,y:220})
+  const [active,setActive]=React.useState(null)
+  const [edgeHint,setEdgeHint]=React.useState(false)
   React.useEffect(()=>{
-    const seq=['ArrowUp','ArrowUp','ArrowDown','ArrowDown','ArrowLeft','ArrowRight','ArrowLeft','ArrowRight','b','a']
-    let p=0
-    const h=e=>{
-      if(e.key===seq[p]){p++; if(p===seq.length){setKonami(true); p=0}} else p=0
+    const speed=10
+    const keys=new Set()
+    const onD=e=>{ if(['ArrowUp','ArrowDown','ArrowLeft','ArrowRight','w','a','s','d','W','A','S','D'].includes(e.key)){ e.preventDefault(); keys.add(e.key.toLowerCase())}}
+    const onU=e=>keys.delete(e.key.toLowerCase())
+    window.addEventListener('keydown',onD); window.addEventListener('keyup',onU)
+    let raf
+    const tick=()=>{
+      let dx=0,dy=0
+      if(keys.has('arrowleft')||keys.has('a')) dx-=speed
+      if(keys.has('arrowright')||keys.has('d')) dx+=speed
+      if(keys.has('arrowup')||keys.has('w')) dy-=speed
+      if(keys.has('arrowdown')||keys.has('s')) dy+=speed
+      if(dx||dy) setPos(p=>{
+        let nx=Math.max(18,Math.min(982,p.x+dx)), ny=Math.max(18,Math.min(632,p.y+dy))
+        // edge -> avery
+        if(nx<=20||nx>=980||ny<=20||ny>=630){ setEdgeHint(true); setTimeout(()=>{ window.location.href='/avery'},200)}
+        return {x:nx,y:ny}
+      })
+      raf=requestAnimationFrame(tick)
     }
-    window.addEventListener('keydown',h); return()=>window.removeEventListener('keydown',h)
+    raf=requestAnimationFrame(tick)
+    return()=>{ cancelAnimationFrame(raf); window.removeEventListener('keydown',onD); window.removeEventListener('keyup',onU)}
   },[])
-
-  const idx=(r,c)=>r*COLS+c
-  const flood=(startIdx, rev)=>{
-    const q=[startIdx], seen=new Set([startIdx])
-    while(q.length){
-      const i=q.shift(); const cell=board[i]
-      rev.add(i)
-      if(cell.adj===0 && !cell.isTrap){
-        for(let dr=-1;dr<=1;dr++) for(let dc=-1;dc<=1;dc++){
-          const nr=cell.r+dr,nc=cell.c+dc
-          if(nr<0||nr>=ROWS||nc<0||nc>=COLS) continue
-          const ni=idx(nr,nc)
-          if(seen.has(ni)||rev.has(ni)||flagged.has(ni)) continue
-          if(board[ni].isTrap) continue
-          seen.add(ni); q.push(ni)
-        }
-      }
-    }
+  React.useEffect(()=>{
+    const hit=LOCS.find(l=> pos.x>l.x-18 && pos.x<l.x+l.w+18 && pos.y>l.y-18 && pos.y<l.y+l.h+18)
+    setActive(hit?.id||null)
+  },[pos])
+  const onInteract=()=>{
+    const hit=LOCS.find(l=>l.id===active)
+    if(hit) window.location.href=hit.href
   }
-  const onReveal=(r,c)=>{
-    if(gameOver||won) return
-    const i=idx(r,c)
-    if(revealed.has(i)||flagged.has(i)) return
-    const cell=board[i]
-    if(cell.isTrap){
-      const nr=new Set(revealed); nr.add(i); setRevealed(nr); setGameOver(true); setShake(i); setTimeout(()=>setShake(null),400)
-      return
-    }
-    const nr=new Set(revealed)
-    if(cell.adj===0) flood(i,nr); else nr.add(i)
-    setRevealed(nr); setMoves(m=>m+1)
-    if(cell.isTreasure && !found.includes(cell.theme)) setFound(f=>[...f, cell.theme])
-    // win: all non-traps revealed
-    const nonTraps=board.filter(c=>!c.isTrap).length
-    if(nr.size===nonTraps) setWon(true)
-  }
-  const onFlag=(e,r,c)=>{
-    e.preventDefault()
-    if(gameOver||won) return
-    const i=idx(r,c)
-    if(revealed.has(i)) return
-    const nf=new Set(flagged)
-    if(nf.has(i)) nf.delete(i); else nf.add(i)
-    setFlagged(nf)
-  }
-  const reset=()=>{ setRevealed(new Set()); setFlagged(new Set()); setGameOver(false); setWon(false); setMoves(0); setFound([]) }
-
-  const flaggedTraps=[...flagged].filter(i=>board[i].isTrap).length
+  React.useEffect(()=>{
+    const h=e=>{ if(e.key==='Enter'||e.key===' ') onInteract()}
+    window.addEventListener('keydown',h); return()=>window.removeEventListener('keydown',h)
+  })
   return (
-    <Layout title="">
-      <style>{`
-        .home-arcade{margin:-24px -24px 0; background:#020617; color:#e2e8f0; overflow:hidden; position:relative; min-height:calc(100vh - 90px)}
-        .home-bg{position:absolute; inset:0; background: radial-gradient(900px 600px at 20% 0%, rgba(99,102,241,0.22), transparent 60%), radial-gradient(800px 500px at 95% 40%, rgba(236,72,153,0.18), transparent 62%), radial-gradient(700px 500px at 50% 85%, rgba(6,182,212,0.14), transparent 70%), linear-gradient(180deg,#020617 0%, #0f172a 100%)}
-        .home-grid{position:absolute; inset:0; opacity:0.05; background-image: linear-gradient(rgba(255,255,255,0.6) 1px, transparent 1px), linear-gradient(90deg, rgba(255,255,255,0.6) 1px, transparent 1px); background-size:32px 32px}
-        .mono{font-family:'JetBrains Mono',ui-monospace,monospace}
-        .cell{aspect-ratio:1; display:flex; align-items:center; justify-content:center; font-size:13px; font-weight:800; border-radius:8px; cursor:pointer; user-select:none; transition: all 0.12s; position:relative; border:1px solid rgba(255,255,255,0.08)}
-        .cell-hidden{background:linear-gradient(180deg, rgba(255,255,255,0.10), rgba(255,255,255,0.04)); backdrop-filter:blur(8px); border:1px solid rgba(255,255,255,0.10); box-shadow: inset 0 1px 0 rgba(255,255,255,0.12), 0 2px 10px rgba(0,0,0,0.25)}
-        .cell-hidden:hover{background:rgba(255,255,255,0.14); transform:translateY(-1px); box-shadow:0 4px 16px rgba(0,0,0,0.35)}
-        .cell-revealed{background:rgba(15,23,42,0.85); border-color:rgba(255,255,255,0.06); cursor:default}
-        .cell-trap{background:#7f1d1d !important; color:#fecaca; animation:shake 0.35s}
-        .cell-treasure{box-shadow:0 0 14px currentColor}
-        @keyframes shake{0%,100%{transform:translateX(0)}25%{transform:translateX(-4px)}75%{transform:translateX(4px)}}
-        @keyframes pop{0%{transform:scale(0.7)}100%{transform:scale(1)}}
-        .num-1{color:#22d3ee} .num-2{color:#4ade80} .num-3{color:#f472b6} .num-4{color:#a78bfa} .num-5{color:#f59e0b} .num-6{color:#38bdf8} .num-7{color:#fb7185} .num-8{color:#94a3b8}
-      `}</style>
-      <div className="home-arcade">
-        <div className="home-bg" /><div className="home-grid" />
-        <div style={{ position:'relative', zIndex:2, maxWidth:1180, margin:'0 auto', padding:'18px 18px 28px' }}>
-          <div style={{ display:'flex', gap:12, flexWrap:'wrap', alignItems:'flex-start', justifyContent:'space-between' }}>
-            <div>
-              <div className="mono" style={{ fontSize:10, letterSpacing:3, color:'#22d3ee' }}>MY-ESPRIT.COM — PLAYABLE HOMEPAGE</div>
-              <div style={{ fontSize:'clamp(26px,4vw,40px)', fontWeight:900, letterSpacing:'-0.04em', lineHeight:1, marginTop:6 }}>The menu <span style={{ background:'linear-gradient(90deg,#f472b6,#22d3ee,#a78bfa)', WebkitBackgroundClip:'text', WebkitTextFillColor:'transparent' }}>is the game.</span></div>
-              <div style={{ fontSize:13, color:'#94a3b8', marginTop:6, maxWidth:560 }}>Cornsweeper-style minesweeper. Click to dig, right-click to flag traps. Uncover treasures to unlock site sections. The whole website lives under the tiles.</div>
-            </div>
-            <div style={{ display:'flex', gap:10, flexWrap:'wrap', alignItems:'center' }}>
-              <div className="mono" style={{ background:'rgba(255,255,255,0.07)', border:'1px solid rgba(255,255,255,0.10)', borderRadius:999, padding:'8px 12px', fontSize:11 }}>⛏ {moves} moves · 🚩 {flaggedTraps}/{board.filter(c=>c.isTrap).length} flagged · 💎 {found.length}/{totalTreasures} portals</div>
-              <button onClick={reset} className="mono" style={{ background:'#fff', color:'#0f172a', border:'none', borderRadius:999, padding:'9px 14px', fontWeight:800, cursor:'pointer', fontSize:12 }}>↺ New board</button>
-            </div>
-          </div>
-
-          {(gameOver || won) && (
-            <div style={{ marginTop:12, padding:'10px 14px', borderRadius:12, background: won?'linear-gradient(90deg,#065f46,#0891b2)':'#7f1d1d', color:'#fff', display:'flex', gap:10, alignItems:'center', justifyContent:'space-between', flexWrap:'wrap' }}>
-              <span className="mono" style={{ fontWeight:800, fontSize:12 }}>{won ? '✦ CLEAR — all portals uncovered!' : '✖ BOOM — you hit a trap!'}</span>
-              <button onClick={reset} style={{ background:'#fff', color:won?'#065f46':'#7f1d1d', border:'none', borderRadius:999, padding:'6px 12px', fontWeight:800, cursor:'pointer' }}>Play again</button>
-            </div>
-          )}
-          {konami && <div className="mono" style={{ marginTop:10, fontSize:11, color:'#fde68a' }}>↑↑↓↓←→←→BA — Konami unlocked: all portals revealed below ✨</div>}
-
-          <div style={{ display:'grid', gridTemplateColumns:'1.15fr 0.85fr', gap:16, marginTop:16 }}>
-            <div style={{ background:'rgba(255,255,255,0.06)', backdropFilter:'blur(14px)', border:'1px solid rgba(255,255,255,0.10)', borderRadius:16, padding:12 }}>
-              <div style={{ display:'grid', gridTemplateColumns:`repeat(${COLS},1fr)`, gap:6 }}>
-                {board.map(cell=>{
-                  const i=idx(cell.r,cell.c)
-                  const isRev=revealed.has(i) || konami
-                  const isFlag=flagged.has(i)
-                  const isShake=shake===i
-                  if(!isRev){
-                    return <button key={i} onClick={()=>onReveal(cell.r,cell.c)} onContextMenu={e=>onFlag(e,cell.r,cell.c)} className={`cell cell-hidden ${isShake?'cell-trap':''}`} aria-label="hidden tile">{isFlag ? '🚩' : ''}</button>
-                  }
-                  if(cell.isTrap) return <div key={i} className="cell cell-revealed cell-trap">✕</div>
-                  if(cell.isTreasure){
-                    const t=THEMES[cell.theme]
-                    return <Link key={i} to={t.href} className="cell cell-revealed cell-treasure" style={{ color:t.color, background:t.bg, textDecoration:'none', animation:'pop 0.25s', fontSize:16 }} title={t.label}>{t.icon}</Link>
-                  }
-                  return <div key={i} className={`cell cell-revealed ${cell.adj?`num-${cell.adj}`:''}`} style={{ fontSize:12 }}>{cell.adj||''}</div>
-                })}
-              </div>
-              <div className="mono" style={{ fontSize:10, color:'#64748b', marginTop:8, display:'flex', gap:10, flexWrap:'wrap' }}>
-                <span>Left click: dig</span><span>·</span><span>Right click: 🚩 flag</span><span>·</span><span>Empty tiles flood-fill</span>
-              </div>
-            </div>
-
-            <div style={{ display:'flex', flexDirection:'column', gap:12 }}>
-              <div style={{ background:'#fff', color:'#0f172a', borderRadius:16, padding:14 }}>
-                <div className="mono" style={{ fontSize:10, letterSpacing:2, color:'#6366f1' }}>PORTALS UNLOCKED</div>
-                <div style={{ display:'grid', gridTemplateColumns:'1fr 1fr', gap:8, marginTop:10 }}>
-                  {THEME_KEYS.map(k=>{
-                    const t=THEMES[k]; const unlocked=found.includes(k) || konami
-                    return (
-                      <Link key={k} to={t.href} style={{ display:'flex', gap:10, alignItems:'center', padding:'10px 10px', borderRadius:12, textDecoration:'none', background: unlocked? t.bg : '#f1f5f9', border:`1px solid ${unlocked? t.color+'40':'#e2e8f0'}`, opacity: unlocked?1:0.55 }}>
-                        <span style={{ width:34, height:34, borderRadius:10, display:'flex', alignItems:'center', justifyContent:'center', background: unlocked? t.color:'#94a3b8', color:'#fff', fontWeight:800 }}>{t.icon}</span>
-                        <span><span style={{ display:'block', fontWeight:800, fontSize:12, color:'#0f172a' }}>{t.label} {unlocked?'':'🔒'}</span><span className="mono" style={{ fontSize:10, color:'#64748b' }}>{unlocked? t.desc : 'Find in board'}</span></span>
-                      </Link>
-                    )
-                  })}
-                </div>
-                <div className="mono" style={{ fontSize:10, color:'#94a3b8', marginTop:8 }}>{found.length===0 ? 'Tip: treasures hide on low-number tiles — use flags to mark traps.' : `Found: ${found.map(k=>THEMES[k].label).join(' · ')}`}</div>
-              </div>
-              <div style={{ background:'rgba(255,255,255,0.07)', border:'1px solid rgba(255,255,255,0.10)', borderRadius:16, padding:14, color:'#e2e8f0' }}>
-                <div className="mono" style={{ fontSize:10, letterSpacing:2, color:'#22d3ee' }}>HOW TO PLAY</div>
-                <ol style={{ margin:'8px 0 0', paddingLeft:18, fontSize:12, lineHeight:1.6, color:'#cbd5e1' }}>
-                  <li>Numbers = adjacent traps. Flag what you suspect, dig what you trust.</li>
-                  <li>Dig a <strong style={{color:'#fff'}}>treasure</strong> (◈⬢🐱▣) — it becomes a portal link.</li>
-                  <li>Clear the board or just portal-hop — either way, the homepage is the lobby.</li>
-                </ol>
-                <div style={{ marginTop:10, display:'flex', gap:8 }}>
-                  <Link to="/kenton" style={{ fontSize:12, fontWeight:800, color:'#fff', background:'#6366f1', padding:'7px 12px', borderRadius:999, textDecoration:'none' }}>Skip to Kenton →</Link>
-                  <Link to="/avery" style={{ fontSize:12, color:'#f472b6', padding:'7px 0', textDecoration:'none' }}>or Avery →</Link>
-                </div>
-              </div>
-            </div>
-          </div>
-        </div>
+    <div style={{margin:'-24px -24px 0', background:'#E8E0C8', color:PALETTE.ink, minHeight:'calc(100vh - 72px)', position:'relative', overflow:'hidden', filter:'sepia(0.38) saturate(0.82)'}}>
+      <style>{`@keyframes drift{from{transform:translateX(-180px)}to{transform:translateX(1160px)}} @keyframes drift2{from{transform:translateX(-220px)}to{transform:translateX(1160px)}} @keyframes flash{0%,49%{fill:#9A8E7A}50%,100%{fill:#7E8FA3}} @keyframes flashStroke{0%,49%{stroke:#9A8E7A}50%,100%{stroke:#7E8FA3}} .flash{animation:flash 0.28s steps(1) infinite} .flashStroke{animation:flashStroke 0.28s steps(1) infinite} .ink{stroke:#0A0A0B; stroke-linecap:round; stroke-linejoin:round}`}</style>
+      {/* story banner */}
+      <div style={{position:'absolute', top:10, left:'50%', transform:'translateX(-50%)', zIndex:5, background:'#F5EED8', border:'2.5px solid #0A0A0B', borderRadius:10, padding:'7px 18px', fontFamily:'JetBrains Mono,monospace', fontSize:11, letterSpacing:2, fontWeight:800, boxShadow:'0 4px 14px rgba(0,0,0,0.18)'}}>MY-ESPIRIT · CORNSWEEPER MENU — WALK TO BUILDINGS · EDGE → AVERY</div>
+      {edgeHint && <div style={{position:'absolute', inset:0, zIndex:10, display:'flex', alignItems:'center', justifyContent:'center', background:'rgba(10,10,11,0.72)', color:'#F5EED8', fontFamily:'JetBrains Mono,monospace', fontSize:18, letterSpacing:4}}>WARPING TO AVERY…</div>}
+      <svg viewBox="0 0 1000 650" style={{width:'100%', height:'calc(100vh - 72px)', display:'block'}} onClick={e=>{
+        const r=e.currentTarget.getBoundingClientRect(); const x=(e.clientX-r.left)/r.width*1000, y=(e.clientY-r.top)/r.height*650; setPos({x:Math.max(18,Math.min(982,x)), y:Math.max(18,Math.min(632,y))})
+      }}>
+        {/* sky */}
+        <rect x="0" y="0" width="1000" height="650" fill="#E8E0C8" />
+        {/* sea bottom */}
+        <rect x="0" y="538" width="1000" height="112" fill={PALETTE.sea} stroke="#0A0A0B" strokeWidth="3" />
+        <g stroke="#0A0A0B" strokeWidth="1.6" opacity="0.9" fill="none">{Array.from({length:6}).map((_,i)=><path key={i} d={`M ${-40+i*180} ${560+i%2*10} q 30 -10 60 0 t 60 0 t 60 0`} />)}</g>
+        {/* clouds */}
+        <g opacity="0.95">
+          <g style={{animation:'drift 26s linear infinite'}}><ellipse cx="180" cy="78" rx="54" ry="22" fill="#F5EED8" className="ink" strokeWidth="2.5"/><ellipse cx="210" cy="68" rx="36" ry="20" fill="#F5EED8" className="ink" strokeWidth="2.5"/><ellipse cx="150" cy="86" rx="30" ry="16" fill="#F5EED8" className="ink" strokeWidth="2.5"/></g>
+          <g style={{animation:'drift2 34s linear infinite'}}><ellipse cx="520" cy="96" rx="62" ry="24" fill="#F5EED8" className="ink" strokeWidth="2.5"/><ellipse cx="560" cy="84" rx="40" ry="18" fill="#F5EED8" className="ink" strokeWidth="2.5"/><ellipse cx="480" cy="102" rx="32" ry="16" fill="#F5EED8" className="ink" strokeWidth="2.5"/></g>
+          <g style={{animation:'drift 42s linear infinite', animationDelay:'-12s'}}><ellipse cx="820" cy="72" rx="48" ry="20" fill="#F5EED8" className="ink" strokeWidth="2.5"/><ellipse cx="848" cy="62" rx="30" ry="16" fill="#F5EED8" className="ink" strokeWidth="2.5"/></g>
+        </g>
+        {/* island ground */}
+        <ellipse cx="500" cy="430" rx="420" ry="148" fill="#C2B8A3" className="ink" strokeWidth="3" />
+        <ellipse cx="500" cy="420" rx="400" ry="132" fill="#D9D0B6" stroke="#0A0A0B" strokeWidth="2" />
+        {/* trees */}
+        {[[120,340],[140,400],[820,300],[860,360],[300,480],[700,480],[88,300]].map(([x,y],i)=><g key={i}><rect x={x-4} y={y} width="8" height="18" fill="#6B6254" className="ink" strokeWidth="1.8"/><circle cx={x} cy={y-6} r="18" fill={active?'#9A8E7A':'#9A8E7A'} stroke="#0A0A0B" strokeWidth="2.2"/><circle cx={x-8} cy={y} r="12" fill="#C2B8A3" className="ink" strokeWidth="1.8"/><circle cx={x+9} cy={y-2} r="10" fill="#D9D0B6" className="ink" strokeWidth="1.8"/></g>)}
+        {/* buildings */}
+        {LOCS.map(l=>{
+          const isActive=active===l.id
+          return (
+            <g key={l.id} onClick={()=> window.location.href=l.href} style={{cursor:'pointer'}}>
+              <rect x={l.x} y={l.y} width={l.w} height={l.h} rx="10" fill={isActive? '#9A8E7A':'#F5EED8'} className={isActive? 'flash ink':'ink'} strokeWidth="3" />
+              <rect x={l.x+10} y={l.y+14} width={l.w-20} height="14" rx="4" fill="#0A0A0B" />
+              <text x={l.x+l.w/2} y={l.y+24} textAnchor="middle" fontSize="8" fontFamily="JetBrains Mono,monospace" fill="#F5EED8" fontWeight="800">{l.label}</text>
+              <text x={l.x+l.w/2} y={l.y+l.h-14} textAnchor="middle" fontSize="7" fontFamily="JetBrains Mono,monospace" fill="#0A0A0B" fontWeight="700">{l.sub}</text>
+              {/* door/window */}
+              <rect x={l.x+l.w/2-14} y={l.y+l.h-28} width="28" height="22" rx="3" fill="#C2B8A3" className="ink" strokeWidth="2" />
+              {isActive && <text x={l.x+l.w/2} y={l.y-10} textAnchor="middle" fontSize="9" fontFamily="JetBrains Mono,monospace" fill="#0A0A0B" fontWeight="800">▶ ENTER [↵]</text>}
+            </g>
+          )
+        })}
+        {/* player */}
+        <g transform={`translate(${pos.x},${pos.y})`}>
+          <ellipse cx="0" cy="14" rx="10" ry="4" fill="rgba(0,0,0,0.22)" />
+          <rect x="-9" y="-14" width="18" height="18" rx="6" fill="#0A0A0B" stroke="#F5EED8" strokeWidth="1.2" />
+          <circle cx="0" cy="-7" r="5" fill="#F5EED8" stroke="#0A0A0B" strokeWidth="1.6" />
+          <text x="0" y="-5" textAnchor="middle" fontSize="7">◉</text>
+        </g>
+        {/* edge markers */}
+        <g opacity="0.55" fontFamily="JetBrains Mono,monospace" fontSize="7" fill="#0A0A0B" textAnchor="middle">
+          <text x="500" y="18">▲ EDGE → AVERY</text><text x="500" y="644">▼ EDGE → AVERY</text><text x="14" y="330" transform="rotate(-90 14 330)">◀ EDGE → AVERY</text><text x="986" y="330" transform="rotate(90 986 330)">EDGE → AVERY ▶</text>
+        </g>
+      </svg>
+      <div style={{position:'absolute', bottom:10, left:12, display:'flex', gap:8, fontFamily:'JetBrains Mono,monospace', fontSize:10, zIndex:5}}>
+        <span style={{background:'#0A0A0B', color:'#F5EED8', padding:'6px 10px', borderRadius:999}}>WASD / ARROWS move · CLICK to walk · ENTER to enter</span>
+        <button onClick={onInteract} disabled={!active} style={{background: active?'#0A0A0B':'#9A8E7A', color:'#F5EED8', border:'2px solid #0A0A0B', borderRadius:999, padding:'6px 12px', fontWeight:800, cursor: active?'pointer':'not-allowed'}}>ENTER → {active||'—'}</button>
       </div>
-    </Layout>
+    </div>
   )
 }
+
 function Kenton() {
   return (
     <Layout title="">
