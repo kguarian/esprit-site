@@ -72,7 +72,7 @@ function Avery() {
   return (
     <Layout title="">
       <style>{`
-        .avery-root{font-family:-apple-system,BlinkMacSystemFont,'SF Pro Display',system-ui,sans-serif; color:#e2e8f0; margin:-1.25rem -1.25rem 0; padding:0; overflow:hidden; border-radius:20px; background:#020617; position:relative}
+        .avery-root{font-family:-apple-system,BlinkMacSystemFont,'SF Pro Display',system-ui,sans-serif; color:#e2e8f0; margin:0; padding:28px 0 32px; overflow:hidden; border-radius:0; background:#020617; position:relative; font-size:16px; line-height:1.55; min-height: calc(100vh - 140px)}
         .avery-bg{position:absolute; top:0; left:0; right:0; bottom:0; background:
           radial-gradient(700px 420px at 18% 8%, rgba(236,72,153,0.30), transparent 62%),
           radial-gradient(720px 480px at 88% 92%, rgba(6,182,212,0.24), transparent 62%),
@@ -88,8 +88,8 @@ function Avery() {
         @keyframes wave{0%{stroke-dashoffset:0}100%{stroke-dashoffset:40}}
         @keyframes glowPulse{0%{filter:drop-shadow(0 0 6px #ec4899)}50%{filter:drop-shadow(0 0 16px #06b6d4)}100%{filter:drop-shadow(0 0 6px #ec4899)}}
         @keyframes decayFlash{0%{opacity:0}15%{opacity:1}30%{opacity:0}100%{opacity:0}}
-        .avery-shell{max-width:1120px; margin:0 auto; position:relative; z-index:2}
-        .avery-main{display:grid; grid-template-columns: 1.35fr 0.85fr; gap:16px; padding:16px 18px 18px}
+        .avery-shell{max-width:1280px; margin:0 auto; position:relative; z-index:2; padding:0 20px}
+        .avery-main{display:grid; grid-template-columns: 1.45fr 0.9fr; gap:20px; padding:20px 0 0}
         .avery-title{font-size: clamp(22px, 2.6vw, 30px); font-weight:800; letter-spacing:-0.04em; line-height:1.05}
         .avery-btn{min-height:44px; padding:0 18px; border-radius:999px; font-weight:700; font-size:13.5px; cursor:pointer; transition: transform 0.12s, box-shadow 0.2s, opacity 0.2s; display:inline-flex; align-items:center; gap:8px}
         .avery-btn:active{transform:scale(0.98)}
