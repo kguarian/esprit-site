@@ -430,15 +430,50 @@ function Avery() {
 }
 
 function ML() {
+  const [data, setData] = React.useState(null)
+  const [err, setErr] = React.useState(null)
+  React.useEffect(() => {
+    fetch('/ml/validate.json').then(r=>r.json()).then(setData).catch(()=>fetch('./ml/validate.json').then(r=>r.json()).then(setData).catch(e=>setErr(String(e))))
+    // also try docs path
+    if (!data) fetch('/docs/ml/validate.json').then(r=>r.json()).then(setData).catch(()=>{})
+  }, [])
+  // try ml/validate.json via relative
+  React.useEffect(() => { if(!data) fetch('ml/validate.json').then(r=>r.json()).then(setData).catch(()=>{}) }, [data])
   return (
-    <Layout title="ML — Algo Trading & Machine Learning">
-      <p>Distinct from <Link to="/code">Code</Link> — focused on models that trade.</p>
-      <ul>
-        <li><strong>Algo trading</strong> — strategies, backtests, execution, risk</li>
-        <li><strong>ML research</strong> — features, labeling, validation, regimes</li>
-        <li><strong>Infra</strong> — data pipelines, evaluation harnesses</li>
-      </ul>
-      <p style={{ fontSize: 13, opacity: 0.7 }}>Coming soon — papers, notebooks, and live results.</p>
+    <Layout title="">
+      <style>{`.ml-root{margin:0 -24px; padding:24px; background:#f8fafc} .ml-shell{max-width:1100px; margin:0 auto} .mono{font-family:'JetBrains Mono',monospace}`}</style>
+      <div className="ml-root">
+        <div className="ml-shell">
+          <div className="mono" style={{ fontSize:10, letterSpacing:2, color:'#6366f1' }}>ML LAB — TREASURY · YIELD · M2 · DXY · OIL · GOLD · SILVER · GSR · REIT · REPO · 200MA</div>
+          <div style={{ fontSize:26, fontWeight:800, letterSpacing:'-0.02em' }}>SPY & NVDA — next-day NN</div>
+          <p style={{ fontSize:13, color:'#475569' }}>12-feature MLP 32×16 (ReLU) — treasury 10Y, curve, DXY, oil, gold, silver, GSR, VNQ, SHV (repo), SPY vs 200MA, M2 proxy, NVDA. Trained 2y (yfinance), validate 20% holdout. WASM via JSON weights (pure JS matmul, WASM-ready).</p>
+          {err && <div style={{ color:'#ef4444', fontSize:12 }}>Load failed: {err} — run <code>python3 ml/train.py</code> to regenerate ml/*.json</div>}
+          {data ? (
+            <div style={{ display:'grid', gridTemplateColumns:'1fr 1fr', gap:16, marginTop:16 }}>
+              <div style={{ background:'#fff', border:'1px solid #e2e8f0', borderRadius:14, padding:16 }}>
+                <div style={{ fontWeight:700 }}>Tomorrow — {data.pred_date}</div>
+                <div style={{ display:'flex', gap:16, marginTop:8 }}>
+                  <div><div className="mono" style={{ fontSize:11, color:'#64748b' }}>SPY</div><div style={{ fontSize:22, fontWeight:800 }}>${data.pred_px_spy?.toFixed(2)} <span style={{ fontSize:12, color: data.pred_ret_spy>0?'#10b981':'#ef4444' }}>{(data.pred_ret_spy*100).toFixed(2)}%</span></div><div className="mono" style={{ fontSize:10, color:'#94a3b8' }}>close {data.last_close_spy?.toFixed(2)}</div></div>
+                  <div><div className="mono" style={{ fontSize:11, color:'#64748b' }}>NVDA</div><div style={{ fontSize:22, fontWeight:800 }}>${data.pred_px_nvda?.toFixed(2)} <span style={{ fontSize:12, color: data.pred_ret_nvda>0?'#10b981':'#ef4444' }}>{(data.pred_ret_nvda*100).toFixed(2)}%</span></div><div className="mono" style={{ fontSize:10, color:'#94a3b8' }}>close {data.last_close_nvda?.toFixed(2)}</div></div>
+                </div>
+                <div className="mono" style={{ fontSize:10, color:'#64748b', marginTop:8 }}>Features: {data.n_train ?? ''} train / {data.n_test ?? ''} test — MAE SPY {(data.mae_spy*100).toFixed(1)}% NVDA {(data.mae_nvda*100).toFixed(1)}%</div>
+              </div>
+              <div style={{ background:'#0f172a', color:'#e2e8f0', borderRadius:14, padding:16 }}>
+                <div className="mono" style={{ fontSize:11, color:'#22d3ee' }}>WASM INFERENCE</div>
+                <div className="mono" style={{ fontSize:11, marginTop:6, lineHeight:1.6, color:'#cbd5e1' }}>
+                  Model: <code>ml/model.json</code> — StandardScaler + 32→16 ReLU<br />
+                  In-browser: <code>fetch + matmul</code> (no server) — swap to <code>onnxruntime-web --wasm</code> by exporting ONNX<br />
+                  Retrain: <code>python3 ml/train.py</code> → regenerates <code>ml/*.json</code>
+                </div>
+                <div className="mono" style={{ fontSize:10, marginTop:8, opacity:0.7 }}>Validate generally: holdout MAE/R² above — this baseline is weak (R² negative) and needs walk-forward + regime features.</div>
+              </div>
+            </div>
+          ) : <div className="mono" style={{ fontSize:12, color:'#64748b', marginTop:12 }}>Loading ml/validate.json…</div>}
+          <div style={{ marginTop:16, fontSize:12, color:'#475569' }}>
+            Full feature list in <code>ml/meta.json</code> — includes yield curve, monetary supply (M2 proxy via SHV), DXY, oil, gold, silver, GSR, real estate (VNQ), repo (SHV), VOO/SPY vs 200MA. Add more via <code>TICKERS</code> in <code>ml/train.py</code>.
+          </div>
+        </div>
+      </div>
     </Layout>
   )
 }
