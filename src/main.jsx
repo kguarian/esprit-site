@@ -28,14 +28,7 @@ function Layout({ title, children }) {
   )
 }
 
-function Home() {
-  return (
-    <Layout title="Home">
-      <p>Welcome. This is the starter React scaffold.</p>
-    </Layout>
-  )
-}
-
+function Home() { return <Layout title="Home"><p>Welcome. This is the starter React scaffold.</p></Layout> }
 function Kenton() {
   return (
     <Layout title="Kenton — Work">
@@ -50,101 +43,238 @@ function Kenton() {
 }
 
 function Avery() {
-  const [state, setState] = React.useState('superposed') // superposed | measuring | collapsed
-  const [outcome, setOutcome] = React.useState(null) // alive | dead
+  const [phase, setPhase] = React.useState('ready') // ready | arming | superposed | measuring | alive | dead
+  const [halfLife] = React.useState(1) // s, for display
   const [stats, setStats] = React.useState({ alive: 0, dead: 0 })
+  const [pulse, setPulse] = React.useState(0)
   const total = stats.alive + stats.dead
+  const waveRef = React.useRef(null)
+
+  // arming animation then superposed
+  function arm() {
+    if (phase !== 'ready') return
+    setPhase('arming')
+    setTimeout(() => setPhase('superposed'), 1200)
+  }
   function measure() {
-    if (state !== 'superposed') return
-    setState('measuring')
+    if (phase !== 'superposed') return
+    setPhase('measuring')
+    let ticks = 0
+    const id = setInterval(() => { setPulse(p => p + 1); ticks++; if (ticks > 6) clearInterval(id) }, 120)
     setTimeout(() => {
       const alive = Math.random() < 0.5
-      setOutcome(alive ? 'alive' : 'dead')
-      setState('collapsed')
+      setPhase(alive ? 'alive' : 'dead')
       setStats(s => ({ alive: s.alive + (alive ? 1 : 0), dead: s.dead + (alive ? 0 : 1) }))
-    }, 900)
+    }, 1100)
   }
-  function reset() { setState('superposed'); setOutcome(null) }
+  function reset() { setPhase('ready'); setPulse(0) }
+
   return (
-    <Layout title="Avery — Schrödinger's Cat Lab">
-      <div style={{ textAlign: 'center', maxWidth: 520, margin: '0 auto' }}>
-        <p style={{ fontStyle: 'italic', opacity: 0.7, fontSize: 13 }}>
-          A sealed box, a decaying atom, a cat. Until you measure, both outcomes exist in superposition.
-          <br /><code style={{ fontSize: 11 }}>|ψ⟩ = (|alive⟩ + |dead⟩)/√2</code>
-        </p>
-
-        <div
-          onClick={measure}
-          role="button" tabIndex={0}
-          onKeyDown={e => e.key === 'Enter' && measure()}
-          style={{
-            margin: '1rem auto', width: 260, height: 220, borderRadius: 16, border: '3px solid #1f2937',
-            background: state === 'superposed' ? 'linear-gradient(135deg,#1f2937 0%,#334155 100%)' : state === 'measuring' ? '#fef9c3' : outcome === 'alive' ? '#ecfdf5' : '#fef2f2',
-            color: state === 'superposed' ? '#fff' : '#111', cursor: state === 'superposed' ? 'pointer' : 'default',
-            display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center',
-            position: 'relative', overflow: 'hidden', transition: 'background 0.4s', userSelect: 'none'
-          }}
-        >
-          {state === 'superposed' && (
-            <>
-              <div style={{ fontSize: 56, animation: 'flicker 0.35s infinite alternate' }}>📦</div>
-              <div style={{ fontSize: 12, opacity: 0.8 }}>BOX CLOSED — superposed</div>
-              <div style={{ fontSize: 22, letterSpacing: 4, opacity: 0.9 }}>🐱 = 😺/💀 ?</div>
-              <div style={{ position: 'absolute', bottom: 8, fontSize: 11, opacity: 0.6 }}>click to measure → collapse wavefunction</div>
-            </>
-          )}
-          {state === 'measuring' && (
-            <>
-              <div style={{ fontSize: 40, animation: 'spin 0.5s linear infinite' }}>⚛️</div>
-              <div style={{ fontSize: 13 }}>measuring…</div>
-              <div style={{ fontSize: 11, opacity: 0.6 }}>Geiger click · poison vial · decoherence</div>
-            </>
-          )}
-          {state === 'collapsed' && outcome === 'alive' && (
-            <>
-              <div style={{ fontSize: 72, animation: 'pop 0.4s ease' }}>😸</div>
-              <div style={{ fontSize: 18, fontWeight: 700, color: '#065f46' }}>ALIVE ✓</div>
-              <div style={{ fontSize: 11, opacity: 0.7 }}>atom did not decay — vial intact</div>
-            </>
-          )}
-          {state === 'collapsed' && outcome === 'dead' && (
-            <>
-              <div style={{ fontSize: 72 }}>💀</div>
-              <div style={{ fontSize: 18, fontWeight: 700, color: '#991b1b' }}>DEAD ✕</div>
-              <div style={{ fontSize: 11, opacity: 0.7 }}>atom decayed — vial released</div>
-            </>
-          )}
-        </div>
-
-        <div style={{ fontSize: 13, minHeight: '1.4em' }}>
-          {state === 'superposed' && <span>Both outcomes possible — <strong>P(alive)=P(dead)=50%</strong> until observation.</span>}
-          {state === 'measuring' && <span style={{ opacity: 0.7 }}>Collapsing…</span>}
-          {state === 'collapsed' && <span>Result: <strong>{outcome}</strong> — wavefunction collapsed. Run again — truly random (Math.random()).</span>}
-        </div>
-
-        <div style={{ marginTop: 12, display: 'flex', gap: 8, justifyContent: 'center' }}>
-          {state === 'collapsed' ? (
-            <button onClick={reset} style={{ padding: '8px 16px', borderRadius: 20, border: '2px solid #1f2937', background: '#fff', cursor: 'pointer', fontWeight: 600 }}>↺ New experiment</button>
-          ) : (
-            <button onClick={measure} disabled={state !== 'superposed'} style={{ padding: '8px 16px', borderRadius: 20, border: 'none', background: state === 'superposed' ? '#1f2937' : '#9ca3af', color: '#fff', cursor: state === 'superposed' ? 'pointer' : 'default', fontWeight: 600 }}>
-              {state === 'measuring' ? 'Measuring…' : 'Measure (open box)'}
-            </button>
-          )}
-          {total > 0 && <button onClick={() => setStats({ alive: 0, dead: 0 })} style={{ padding: '8px 12px', borderRadius: 20, border: '1px solid #d1d5db', background: '#fff', cursor: 'pointer', fontSize: 12 }}>Reset stats</button>}
-        </div>
-
-        {total > 0 && (
-          <div style={{ marginTop: 16, fontSize: 12, textAlign: 'left', maxWidth: 360, marginLeft: 'auto', marginRight: 'auto', background: '#f9fafb', borderRadius: 10, padding: '10px 14px' }}>
-            <div style={{ display: 'flex', justifyContent: 'space-between', fontWeight: 600 }}><span>Trials: {total}</span><span>Alive {stats.alive} · Dead {stats.dead}</span></div>
-            <div style={{ display: 'flex', gap: 4, marginTop: 6, height: 12, borderRadius: 6, overflow: 'hidden', background: '#e5e7eb' }}>
-              <div style={{ width: `${total ? (stats.alive / total) * 100 : 50}%`, background: '#10b981', transition: 'width 0.4s' }} />
-              <div style={{ flex: 1, background: '#ef4444', transition: 'width 0.4s' }} />
-            </div>
-            <div style={{ marginTop: 4, opacity: 0.6, fontSize: 11 }}>Expect ~50/50 — law of large numbers. Each collapse is independent.</div>
+    <Layout title="">
+      <style>{`
+        @import url('https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;600;700&family=JetBrains+Mono:wght@400;600&display=swap');
+        .avery-root{font-family:'Space Grotesk',system-ui,sans-serif; color:#e2e8f0; margin:-1rem -1rem 0; padding:0; overflow:hidden; border-radius:16px; background:#020617; position:relative}
+        .avery-bg{position:absolute; inset:0; background:
+          radial-gradient(600px 400px at 20% 10%, rgba(236,72,153,0.28), transparent 60%),
+          radial-gradient(800px 500px at 90% 90%, rgba(6,182,212,0.22), transparent 60%),
+          radial-gradient(500px 500px at 50% 50%, rgba(139,92,246,0.18), transparent 70%),
+          linear-gradient(180deg,#020617 0%, #0f172a 100%); z-index:0}
+        .avery-grid{position:absolute; inset:0; opacity:0.08; background-image: linear-gradient(rgba(255,255,255,0.12) 1px, transparent 1px), linear-gradient(90deg, rgba(255,255,255,0.12) 1px, transparent 1px); background-size:40px 40px; z-index:0}
+        .glass{backdrop-filter:blur(16px) saturate(1.4); -webkit-backdrop-filter:blur(16px) saturate(1.4); background:rgba(255,255,255,0.07); border:1px solid rgba(255,255,255,0.12); box-shadow: 0 8px 40px rgba(0,0,0,0.45), inset 0 1px 0 rgba(255,255,255,0.15)}
+        .neon{box-shadow: 0 0 12px rgba(236,72,153,0.6), 0 0 32px rgba(6,182,212,0.35), inset 0 0 12px rgba(255,255,255,0.08)}
+        .mono{font-family:'JetBrains Mono',monospace}
+        @keyframes shimmer{0%{background-position:-200% 0}100%{background-position:200% 0}}
+        @keyframes float{0%,100%{transform:translateY(0)}50%{transform:translateY(-6px)}}
+        @keyframes wave{0%{stroke-dashoffset:0}100%{stroke-dashoffset:40}}
+        @keyframes glowPulse{0%{filter:drop-shadow(0 0 6px #ec4899)}50%{filter:drop-shadow(0 0 14px #06b6d4)}100%{filter:drop-shadow(0 0 6px #ec4899)}}
+        @keyframes decayFlash{0%{opacity:0}15%{opacity:1}30%{opacity:0}100%{opacity:0}}
+      `}</style>
+      <div className="avery-root">
+        <div className="avery-bg" /><div className="avery-grid" />
+        {/* header */}
+        <div style={{ position: 'relative', zIndex: 2, padding: '18px 18px 0', display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: 12 }}>
+          <div>
+            <div className="mono" style={{ fontSize: 10, letterSpacing: 3, opacity: 0.7, color: '#22d3ee' }}>AVERY LAB // SCHRÖDINGER PROTOCOL</div>
+            <div style={{ fontSize: 26, fontWeight: 800, letterSpacing: -0.5, background: 'linear-gradient(90deg,#f472b6,#22d3ee,#a78bfa)', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent' }}>The Cat Experiment</div>
+            <div style={{ fontSize: 12, opacity: 0.75 }}>Physically accurate · sealed box · single ²¹⁰Po atom · Geiger + hammer + HCN vial · unitary evolution until measurement</div>
           </div>
-        )}
+          <div className="glass" style={{ borderRadius: 12, padding: '10px 14px', minWidth: 160 }}>
+            <div className="mono" style={{ fontSize: 10, opacity: 0.7 }}>STATE VECTOR</div>
+            <div className="mono" style={{ fontSize: 13 }}>
+              |ψ⟩ = <span style={{ color: phase === 'alive' ? '#10b981' : phase === 'dead' ? '#ef4444' : '#f472b6' }}>
+                {phase === 'alive' ? '1|alive⟩' : phase === 'dead' ? '1|dead⟩' : phase === 'superposed' || phase === 'measuring' ? '(|alive⟩+|dead⟩)/√2' : '—'}
+              </span>
+            </div>
+            <div className="mono" style={{ fontSize: 10, opacity: 0.6 }}>P(alive)=P(dead)=50% · t½={halfLife}s · HFS</div>
+          </div>
+        </div>
+
+        {/* main lab */}
+        <div style={{ position: 'relative', zIndex: 2, display: 'grid', gridTemplateColumns: '1.2fr 0.9fr', gap: 14, padding: 18 }}>
+          {/* left: apparatus */}
+          <div className="glass neon" style={{ borderRadius: 16, padding: 14, position: 'relative', overflow: 'hidden' }}>
+            <div className="mono" style={{ fontSize: 10, letterSpacing: 2, opacity: 0.7, marginBottom: 8 }}>APPARATUS — CROSS SECTION</div>
+
+            {/* SVG apparatus */}
+            <div style={{ background: 'rgba(0,0,0,0.35)', borderRadius: 12, padding: 8, border: '1px solid rgba(255,255,255,0.08)' }}>
+              <svg viewBox="0 0 640 360" width="100%" style={{ display: 'block', maxHeight: 360 }}>
+                {/* lead box enclosure */}
+                <rect x={12} y={12} width={616} height={336} rx={18} fill="none" stroke="rgba(255,255,255,0.12)" strokeWidth={1.2} />
+                <text x={22} y={28} fill="#94a3b8" fontSize={8} className="mono">LEAD SHIELD · 5cm · THERMALLY ISOLATED</text>
+
+                {/* atom chamber */}
+                <g>
+                  <rect x={28} y={48} width={160} height={120} rx={12} fill="rgba(139,92,246,0.12)" stroke="#a78bfa" strokeWidth={1.2} />
+                  <text x={36} y={64} fill="#c4b5fd" fontSize={9} className="mono">ATOM CHAMBER</text>
+                  <text x={36} y={76} fill="#c4b5fd" fontSize={7} className="mono">single ²¹⁰Po · α-decay · t½=1s</text>
+                  {/* nucleus */}
+                  <circle cx={108} cy={112} r={18} fill="#7c3aed" stroke="#ddd6fe" strokeWidth={1} opacity={phase==='superposed' ? 0.95 : 0.7} style={{ animation: phase==='superposed' ? 'glowPulse 1.2s infinite' : '' }} />
+                  <circle cx={108} cy={112} r={4} fill="#fde68a" />
+                  {/* orbitals */}
+                  <ellipse cx={108} cy={112} rx={38} ry={18} fill="none" stroke="#22d3ee" strokeWidth={0.9} opacity={0.5} />
+                  <ellipse cx={108} cy={112} rx={18} ry={38} fill="none" stroke="#ec4899" strokeWidth={0.9} opacity={0.5} />
+                  <circle cx={108+38} cy={112} r={3} fill="#22d3ee" style={{ animation: phase!=='ready' ? 'spin 1s linear infinite' : '' }} />
+                  {/* wave */}
+                  <path d="M 28 148 Q 60 132 92 148 T 156 148 T 188 148" fill="none" stroke="#f472b6" strokeWidth={1.2} strokeDasharray="6 4" style={{ animation: 'wave 1s linear infinite', opacity: phase==='superposed' ? 1 : 0.25 }} />
+                  {/* decay indicator */}
+                  {(phase==='alive' || phase==='dead') && <text x={108} y={134} textAnchor="middle" fill={phase==='dead' ? '#f87171' : '#34d399'} fontSize={7} className="mono">{phase==='dead' ? 'DECAYED → α' : 'NOT DECAYED'}</text>}
+                </g>
+
+                {/* Geiger tube */}
+                <g>
+                  <rect x={200} y={78} width={110} height={52} rx={10} fill="rgba(6,182,212,0.14)" stroke="#22d3ee" strokeWidth={1.2} />
+                  <text x={208} y={94} fill="#67e8f9" fontSize={8} className="mono">GEIGER-MÜLLER</text>
+                  <rect x={214} y={102} width={82} height={10} rx={5} fill={phase==='measuring' || phase==='dead' ? '#22d3ee' : '#334155'} />
+                  <rect x={214} y={102} width={(phase==='measuring' ? (pulse%4)*20+10 : phase==='dead' ? 82 : 8)} height={10} rx={5} fill="#f472b6" style={{ transition: 'width 0.15s' }} />
+                  <circle cx={304} cy={107} r={4} fill={phase==='measuring' ? '#fde68a' : '#64748b'} style={{ animation: phase==='measuring' ? 'decayFlash 0.25s infinite' : '' }} />
+                  <text x={208} y={124} fill="#94a3b8" fontSize={6} className="mono">Ar + HV · avalanche</text>
+                  {/* wire */}
+                  <path d="M188 112 H200" stroke="#67e8f9" strokeWidth={1.2} />
+                </g>
+
+                {/* relay + hammer */}
+                <g>
+                  <rect x={328} y={66} width={86} height={74} rx={10} fill="rgba(251,146,60,0.12)" stroke="#fb923c" strokeWidth={1.2} />
+                  <text x={336} y={82} fill="#fed7aa" fontSize={8} className="mono">HAMMER RELAY</text>
+                  <rect x={348} y={90} width={46} height={28} rx={6} fill={phase==='dead' ? '#fb923c' : '#1f2937'} stroke="#fdba74" />
+                  <line x1={371} y1={118} x2={371} y2={148} stroke="#fdba74" strokeWidth={3} strokeLinecap="round" style={{ transform: phase==='dead' ? 'rotate(42deg)' : 'rotate(0deg)', transformOrigin: '371px 118px', transition: 'transform 0.4s' }} />
+                  <text x={336} y={134} fill="#94a3b8" fontSize={6} className="mono">{phase==='dead' ? 'TRIGGERED' : 'ARMED'}</text>
+                  <path d="M310 107 H328" stroke="#fb923c" strokeWidth={1.2} />
+                </g>
+
+                {/* vial */}
+                <g>
+                  <rect x={434} y={88} width={44} height={56} rx={8} fill={phase==='dead' ? 'rgba(239,68,68,0.28)' : 'rgba(16,185,129,0.14)'} stroke={phase==='dead' ? '#ef4444' : '#10b981'} strokeWidth={1.2} />
+                  <text x={438} y={104} fill={phase==='dead' ? '#fecaca' : '#6ee7b7'} fontSize={6} className="mono">HCN</text>
+                  <text x={438} y={112} fill={phase==='dead' ? '#fecaca' : '#6ee7b7'} fontSize={6} className="mono">VIAL</text>
+                  <path d="M 442 122 Q 456 130 470 122" stroke={phase==='dead' ? '#fecaca' : '#6ee7b7'} strokeWidth={1} fill="none" opacity={phase==='dead' ? 0.9 : 0.4} style={{ strokeDasharray: phase==='dead' ? '0' : '2 3' }} />
+                  {phase==='dead' && <text x={456} y={138} textAnchor="middle" fill="#fecaca" fontSize={6} className="mono">SHATTERED</text>}
+                  <path d="M414 107 H434" stroke="#fb923c" strokeWidth={1.2} />
+                </g>
+
+                {/* cat chamber */}
+                <g>
+                  <rect x={28} y={190} width={450} height={148} rx={16} fill={phase==='superposed' ? 'rgba(255,255,255,0.04)' : phase==='alive' ? 'rgba(16,185,129,0.10)' : phase==='dead' ? 'rgba(239,68,68,0.10)' : 'rgba(15,23,42,0.5)'} stroke={phase==='alive' ? '#10b981' : phase==='dead' ? '#ef4444' : 'rgba(255,255,255,0.14)'} strokeWidth={1.4} />
+                  <text x={36} y={206} fill="#e2e8f0" fontSize={9} className="mono">CAT CHAMBER · SEALED · NO DECOHERENCE UNTIL MEASURED</text>
+                  {/* cat */}
+                  <text x={248} y={278} textAnchor="middle" fontSize={phase==='superposed' ? 56 : 68} style={{ filter: phase==='superposed' ? 'blur(0.3px) brightness(1.1)' : '', opacity: phase==='superposed' ? 0.92 : 1, transition: 'all 0.4s' }}>
+                    {phase==='superposed' ? '🐱‍👓' : phase==='alive' ? '😸' : phase==='dead' ? '😵' : '📦'}
+                  </text>
+                  {phase==='superposed' && (
+                    <>
+                      <text x={248} y={300} textAnchor="middle" fill="#f472b6" fontSize={8} className="mono">|ψ_cat⟩ = (|alive⟩ + |dead⟩)/√2</text>
+                      <g opacity={0.75}>
+                        <text x={180} y={250} fill="#22d3ee" fontSize={10}>😺</text>
+                        <text x={300} y={250} fill="#f87171" fontSize={10}>💀</text>
+                        <path d="M200 255 Q248 235 296 255" fill="none" stroke="url(#grad)" strokeWidth={1.2} strokeDasharray="4 3" />
+                      </g>
+                    </>
+                  )}
+                  {phase==='measuring' && <text x={248} y={300} textAnchor="middle" fill="#fde68a" fontSize={9} className="mono">DECOHERING… ENTANGLING WITH APPARATUS</text>}
+                  {phase==='alive' && <text x={248} y={302} textAnchor="middle" fill="#6ee7b7" fontSize={9} className="mono">COLLAPSED → |alive⟩ · NO DECAY OBSERVED</text>}
+                  {phase==='dead' && <text x={248} y={302} textAnchor="middle" fill="#fecaca" fontSize={9} className="mono">COLLAPSED → |dead⟩ · DECAY DETECTED</text>}
+                  {/* coupling */}
+                  <path d="M108 168 V190" stroke="#a78bfa" strokeWidth={1} strokeDasharray="5 4" opacity={0.6} />
+                  <path d="M456 144 V190" stroke={phase==='dead' ? '#ef4444' : '#10b981'} strokeWidth={1} strokeDasharray="5 4" opacity={0.65} />
+                </g>
+
+                {/* right: legend */}
+                <g>
+                  <rect x={496} y={48} width={132} height={290} rx={12} fill="rgba(255,255,255,0.05)" stroke="rgba(255,255,255,0.08)" />
+                  <text x={506} y={66} fill="#e2e8f0" fontSize={8} className="mono">PHYSICS</text>
+                  <text x={506} y={80} fill="#94a3b8" fontSize={6} className="mono">U(t)=exp(-iHt/ħ) · unitary</text>
+                  <text x={506} y={92} fill="#94a3b8" fontSize={6} className="mono">measurement = projection</text>
+                  <text x={506} y={108} fill="#f472b6" fontSize={7} className="mono">Born rule: |α|²=|β|²=½</text>
+                  <text x={506} y={124} fill="#22d3ee" fontSize={7} className="mono">atom → Geiger entangled</text>
+                  <text x={506} y={136} fill="#a78bfa" fontSize={7} className="mono">cat entangled → macro</text>
+                  <text x={506} y={152} fill="#fde68a" fontSize={7} className="mono">observer collapses</text>
+                  <line x1={506} y1={162} x2={618} y2={162} stroke="rgba(255,255,255,0.08)" />
+                  <text x={506} y={176} fill="#94a3b8" fontSize={6} className="mono">TRIAL STATS</text>
+                  <text x={506} y={190} fill="#6ee7b7" fontSize={9} className="mono">ALIVE {stats.alive}</text>
+                  <text x={566} y={190} fill="#f87171" fontSize={9} className="mono">DEAD {stats.dead}</text>
+                  <text x={506} y={204} fill="#cbd5e1" fontSize={7} className="mono">N={total} · expect 50/50</text>
+                </g>
+
+                <defs>
+                  <linearGradient id="grad" x1="0%" y1="0%" x2="100%" y2="0%"><stop offset="0%" stopColor="#22d3ee" /><stop offset="100%" stopColor="#f472b6" /></linearGradient>
+                </defs>
+              </svg>
+            </div>
+
+            <div style={{ display: 'flex', gap: 8, marginTop: 10, flexWrap: 'wrap' }}>
+              {phase === 'ready' && <button onClick={arm} className="glass" style={{ padding: '10px 16px', borderRadius: 12, color: '#fff', background: 'linear-gradient(90deg,#ec4899,#06b6d4)', border: 'none', cursor: 'pointer', fontWeight: 700 }}>⚡ Arm atom (seal box)</button>}
+              {phase === 'arming' && <span className="mono" style={{ fontSize: 12, padding: '10px 0', color: '#fde68a' }}>Sealing… evacuating decoherence…</span>}
+              {phase === 'superposed' && <button onClick={measure} className="glass" style={{ padding: '10px 16px', borderRadius: 12, color: '#fff', background: 'linear-gradient(90deg,#7c3aed,#ec4899)', border: 'none', cursor: 'pointer', fontWeight: 700, boxShadow: '0 0 18px rgba(236,72,153,0.6)' }}>👁️ Measure — open box (collapse)</button>}
+              {phase === 'measuring' && <span className="mono" style={{ fontSize: 12, padding: '10px 0', color: '#fde68a' }}>Collapsing wavefunction…</span>}
+              {(phase === 'alive' || phase === 'dead') && <button onClick={reset} className="glass" style={{ padding: '10px 16px', borderRadius: 12, color: '#fff', background: 'rgba(255,255,255,0.08)', border: '1px solid rgba(255,255,255,0.14)', cursor: 'pointer', fontWeight: 700 }}>↺ New run — re-prepare |ψ⟩</button>}
+              {total > 0 && <button onClick={() => setStats({ alive: 0, dead: 0 })} style={{ padding: '10px 12px', borderRadius: 12, background: 'transparent', color: '#94a3b8', border: '1px solid rgba(148,163,184,0.25)', cursor: 'pointer', fontSize: 12 }}>Reset stats</button>}
+            </div>
+          </div>
+
+          {/* right column */}
+          <div style={{ display: 'flex', flexDirection: 'column', gap: 14 }}>
+            <div className="glass" style={{ borderRadius: 16, padding: 14 }}>
+              <div className="mono" style={{ fontSize: 10, letterSpacing: 2, opacity: 0.7 }}>WAVEFUNCTION</div>
+              <div className="mono" style={{ fontSize: 11, marginTop: 6, lineHeight: 1.6 }}>
+                <span style={{ color: '#f472b6' }}>|ψ(t)⟩</span> = α(t)|not decayed⟩|alive⟩ + β(t)|decayed⟩|dead⟩<br />
+                <span style={{ opacity: 0.6 }}>α = e^{-λt/2}, |α|² = e^{-λt}, |β|² = 1-e^{-λt}</span><br />
+                <span style={{ opacity: 0.6 }}>Half-life 1s ⇒ λ=ln2≈0.693 s⁻¹. At t=1s, P=½.</span>
+              </div>
+              <div style={{ marginTop: 10, height: 54, background: 'rgba(0,0,0,0.35)', borderRadius: 10, padding: 6, display: 'flex', alignItems: 'center', gap: 6 }}>
+                <div style={{ flex: 1, height: 8, borderRadius: 6, background: '#0f172a', overflow: 'hidden', display: 'flex' }}>
+                  <div style={{ width: `${phase === 'alive' ? 100 : phase === 'dead' ? 0 : 50}%`, background: 'linear-gradient(90deg,#10b981,#22d3ee)', transition: 'width 0.6s' }} />
+                  <div style={{ flex: 1, background: 'linear-gradient(90deg,#ef4444,#f472b6)', transition: 'width 0.6s', opacity: phase === 'superposed' ? 0.9 : phase === 'alive' ? 0.15 : phase === 'dead' ? 1 : 0.9 }} />
+                </div>
+                <div className="mono" style={{ fontSize: 10, minWidth: 64, textAlign: 'right' }}>
+                  <span style={{ color: '#34d399' }}>{phase === 'alive' ? '100%' : phase === 'dead' ? '0%' : '50%'}</span>
+                  <span style={{ opacity: 0.5 }}> / </span>
+                  <span style={{ color: '#f87171' }}>{phase === 'dead' ? '100%' : phase === 'alive' ? '0%' : '50%'}</span>
+                </div>
+              </div>
+              <div style={{ marginTop: 8, display: 'flex', gap: 6 }}>
+                <span className="mono" style={{ fontSize: 10, padding: '4px 8px', borderRadius: 20, background: 'rgba(16,185,129,0.14)', color: '#6ee7b7', border: '1px solid rgba(16,185,129,0.3)' }}>alive {stats.alive}</span>
+                <span className="mono" style={{ fontSize: 10, padding: '4px 8px', borderRadius: 20, background: 'rgba(239,68,68,0.14)', color: '#fecaca', border: '1px solid rgba(239,68,68,0.3)' }}>dead {stats.dead}</span>
+                <span className="mono" style={{ fontSize: 10, padding: '4px 8px', borderRadius: 20, background: 'rgba(255,255,255,0.06)', color: '#cbd5e1' }}>N={total}</span>
+              </div>
+            </div>
+
+            <div className="glass" style={{ borderRadius: 16, padding: 14 }}>
+              <div className="mono" style={{ fontSize: 10, letterSpacing: 2, opacity: 0.7 }}>WHAT YOU'RE SEEING</div>
+              <ul style={{ margin: '8px 0 0', paddingLeft: 16, fontSize: 12, lineHeight: 1.5, opacity: 0.85 }}>
+                <li><strong>Atom chamber:</strong> single ²¹⁰Po nucleus. α-decay is quantum tunneling — truly random, no hidden variable. Orbitals shimmer while superposed.</li>
+                <li><strong>Geiger + relay + vial:</strong> decay → avalanche → hammer shatters HCN. Chain is unitary until you look.</li>
+                <li><strong>Cat:</strong> entangled with atom. Not “unknown” — <em>undetermined</em>. Measurement projects to |alive⟩ or |dead⟩ with Born probabilities.</li>
+                <li><strong>Repeat:</strong> each run re-prepares |ψ⟩. Over many trials, ~50/50. No memory.</li>
+              </ul>
+            </div>
+
+            <div className="glass" style={{ borderRadius: 16, padding: 12, display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+              <div className="mono" style={{ fontSize: 10, opacity: 0.6 }}>Avery’s lab • punk-rock liquid glass • neon cyber-physics</div>
+              <div style={{ width: 10, height: 10, borderRadius: '50%', background: phase === 'superposed' ? '#f472b6' : phase === 'alive' ? '#10b981' : phase === 'dead' ? '#ef4444' : '#334155', boxShadow: `0 0 10px ${phase === 'superposed' ? '#ec4899' : phase === 'alive' ? '#10b981' : phase === 'dead' ? '#ef4444' : 'transparent'}`, animation: phase !== 'ready' ? 'glowPulse 1s infinite' : '' }} />
+            </div>
+          </div>
+        </div>
       </div>
-      <style>{`@keyframes flicker{from{opacity:0.9;transform:scale(1)}to{opacity:1;transform:scale(1.02)}} @keyframes spin{to{transform:rotate(360deg)}} @keyframes pop{from{transform:scale(0.7)}to{transform:scale(1)}}`}</style>
     </Layout>
   )
 }
@@ -162,46 +292,11 @@ function ML() {
     </Layout>
   )
 }
-
-function Contact() {
-  return (
-    <Layout title="Contact">
-      <p>Contact page scaffold.</p>
-    </Layout>
-  )
-}
-
-function Links() {
-  return (
-    <Layout title="Links">
-      <p>Links page scaffold.</p>
-    </Layout>
-  )
-}
-
-function Code() {
-  return (
-    <Layout title="Code">
-      <p>Code/projects page scaffold.</p>
-    </Layout>
-  )
-}
-
-function More() {
-  return (
-    <Layout title="More">
-      <p>Extra page scaffold.</p>
-    </Layout>
-  )
-}
-
-function NotFound() {
-  return (
-    <Layout title="Not Found">
-      <p>That page does not exist.</p>
-    </Layout>
-  )
-}
+function Contact() { return <Layout title="Contact"><p>Contact page scaffold.</p></Layout> }
+function Links() { return <Layout title="Links"><p>Links page scaffold.</p></Layout> }
+function Code() { return <Layout title="Code"><p>Code/projects page scaffold.</p></Layout> }
+function More() { return <Layout title="More"><p>Extra page scaffold.</p></Layout> }
+function NotFound() { return <Layout title="Not Found"><p>That page does not exist.</p></Layout> }
 
 createRoot(document.getElementById('root')).render(
   <React.StrictMode>
