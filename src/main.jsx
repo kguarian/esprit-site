@@ -50,67 +50,101 @@ function Kenton() {
 }
 
 function Avery() {
-  const petals = 9
-  const [picked, setPicked] = React.useState(0)
-  const [done, setDone] = React.useState(false)
-  const lovesMe = picked % 2 === 1 // odd = loves me
-  const remaining = petals - picked
-  const phrase = picked === 0 ? 'pick a petal…' : picked < petals ? (lovesMe ? 'she loves me ♡' : 'she loves me not…') : (lovesMe ? 'she loves me! ♡' : 'she loves me not…')
-  function pick(i) {
-    if (done || i < picked) return
-    const n = picked + 1
-    setPicked(n)
-    if (n >= petals) setDone(true)
+  const [state, setState] = React.useState('superposed') // superposed | measuring | collapsed
+  const [outcome, setOutcome] = React.useState(null) // alive | dead
+  const [stats, setStats] = React.useState({ alive: 0, dead: 0 })
+  const total = stats.alive + stats.dead
+  function measure() {
+    if (state !== 'superposed') return
+    setState('measuring')
+    setTimeout(() => {
+      const alive = Math.random() < 0.5
+      setOutcome(alive ? 'alive' : 'dead')
+      setState('collapsed')
+      setStats(s => ({ alive: s.alive + (alive ? 1 : 0), dead: s.dead + (alive ? 0 : 1) }))
+    }, 900)
   }
-  function reset() { setPicked(0); setDone(false) }
+  function reset() { setState('superposed'); setOutcome(null) }
   return (
-    <Layout title="Avery — She loves me, she loves me not">
-      <div style={{ textAlign: 'center', padding: '1rem' }}>
-        <p style={{ fontStyle: 'italic', minHeight: '1.5em', fontSize: 18, transition: 'all 0.3s' }}>{phrase}</p>
-        <div style={{ position: 'relative', width: 220, height: 220, margin: '0 auto' }}>
-          <div style={{
-            position: 'absolute', inset: 0, display: 'flex', alignItems: 'center', justifyContent: 'center',
-            fontSize: 54, opacity: done ? 1 : 0.15, transition: 'opacity 0.5s'
-          }}>{lovesMe ? '🐱💖' : '🐱🥀'}</div>
-          <svg width={220} height={220} viewBox="0 0 200 200" style={{ position: 'relative' }}>
-            <circle cx={100} cy={100} r={18} fill="#facc15" stroke="#a16207" strokeWidth={2} />
-            {Array.from({ length: petals }).map((_, i) => {
-              const angle = (i / petals) * 360 - 90
-              const isPicked = i < picked
-              const isNext = i === picked
-              return (
-                <g key={i} onClick={() => pick(i)} style={{ cursor: isPicked ? 'default' : 'pointer' }}
-                   role="button" tabIndex={isPicked ? -1 : 0}
-                   onKeyDown={e => e.key === 'Enter' && pick(i)}>
-                  <ellipse
-                    cx={100 + Math.cos(angle * Math.PI / 180) * 55}
-                    cy={100 + Math.sin(angle * Math.PI / 180) * 55}
-                    rx={22} ry={36} fill={isPicked ? '#e5e7eb' : isNext ? '#f472b6' : '#f9a8d4'}
-                    stroke="#be185d" strokeWidth={isNext ? 2.5 : 1.2}
-                    opacity={isPicked ? 0.25 : 1}
-                    transform={`rotate(${angle + 90} ${100 + Math.cos(angle * Math.PI / 180) * 55} ${100 + Math.sin(angle * Math.PI / 180) * 55})`}
-                    style={{ transition: 'all 0.35s', filter: isPicked ? 'grayscale(0.8)' : isNext ? 'drop-shadow(0 0 6px #f472b6)' : '' }}
-                  />
-                  {isPicked && (
-                    <text x={100 + Math.cos(angle * Math.PI / 180) * 55} y={100 + Math.sin(angle * Math.PI / 180) * 55}
-                      textAnchor="middle" dominantBaseline="middle" fontSize={10} fill="#9ca3af">✕</text>
-                  )}
-                </g>
-              )
-            })}
-          </svg>
-          {remaining > 0 && !done && <div style={{ fontSize: 11, opacity: 0.6 }}>{remaining} petals left — click the highlighted one</div>}
+    <Layout title="Avery — Schrödinger's Cat Lab">
+      <div style={{ textAlign: 'center', maxWidth: 520, margin: '0 auto' }}>
+        <p style={{ fontStyle: 'italic', opacity: 0.7, fontSize: 13 }}>
+          A sealed box, a decaying atom, a cat. Until you measure, both outcomes exist in superposition.
+          <br /><code style={{ fontSize: 11 }}>|ψ⟩ = (|alive⟩ + |dead⟩)/√2</code>
+        </p>
+
+        <div
+          onClick={measure}
+          role="button" tabIndex={0}
+          onKeyDown={e => e.key === 'Enter' && measure()}
+          style={{
+            margin: '1rem auto', width: 260, height: 220, borderRadius: 16, border: '3px solid #1f2937',
+            background: state === 'superposed' ? 'linear-gradient(135deg,#1f2937 0%,#334155 100%)' : state === 'measuring' ? '#fef9c3' : outcome === 'alive' ? '#ecfdf5' : '#fef2f2',
+            color: state === 'superposed' ? '#fff' : '#111', cursor: state === 'superposed' ? 'pointer' : 'default',
+            display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center',
+            position: 'relative', overflow: 'hidden', transition: 'background 0.4s', userSelect: 'none'
+          }}
+        >
+          {state === 'superposed' && (
+            <>
+              <div style={{ fontSize: 56, animation: 'flicker 0.35s infinite alternate' }}>📦</div>
+              <div style={{ fontSize: 12, opacity: 0.8 }}>BOX CLOSED — superposed</div>
+              <div style={{ fontSize: 22, letterSpacing: 4, opacity: 0.9 }}>🐱 = 😺/💀 ?</div>
+              <div style={{ position: 'absolute', bottom: 8, fontSize: 11, opacity: 0.6 }}>click to measure → collapse wavefunction</div>
+            </>
+          )}
+          {state === 'measuring' && (
+            <>
+              <div style={{ fontSize: 40, animation: 'spin 0.5s linear infinite' }}>⚛️</div>
+              <div style={{ fontSize: 13 }}>measuring…</div>
+              <div style={{ fontSize: 11, opacity: 0.6 }}>Geiger click · poison vial · decoherence</div>
+            </>
+          )}
+          {state === 'collapsed' && outcome === 'alive' && (
+            <>
+              <div style={{ fontSize: 72, animation: 'pop 0.4s ease' }}>😸</div>
+              <div style={{ fontSize: 18, fontWeight: 700, color: '#065f46' }}>ALIVE ✓</div>
+              <div style={{ fontSize: 11, opacity: 0.7 }}>atom did not decay — vial intact</div>
+            </>
+          )}
+          {state === 'collapsed' && outcome === 'dead' && (
+            <>
+              <div style={{ fontSize: 72 }}>💀</div>
+              <div style={{ fontSize: 18, fontWeight: 700, color: '#991b1b' }}>DEAD ✕</div>
+              <div style={{ fontSize: 11, opacity: 0.7 }}>atom decayed — vial released</div>
+            </>
+          )}
         </div>
-        {done && (
-          <div style={{ marginTop: 14, animation: 'pop 0.4s ease' }}>
-            <div style={{ fontSize: 28 }}>{lovesMe ? 'She loves me ♡' : 'She loves me not…'}</div>
-            <div style={{ fontSize: 13, opacity: 0.7 }}>{lovesMe ? 'Schrödinger would approve. The cat is definitely alive.' : 'Try again? The universe is probabilistic.'}</div>
-            <button onClick={reset} style={{ marginTop: 10, padding: '6px 14px', borderRadius: 20, border: '1px solid #333', background: '#fff', cursor: 'pointer' }}>↺ new daisy</button>
+
+        <div style={{ fontSize: 13, minHeight: '1.4em' }}>
+          {state === 'superposed' && <span>Both outcomes possible — <strong>P(alive)=P(dead)=50%</strong> until observation.</span>}
+          {state === 'measuring' && <span style={{ opacity: 0.7 }}>Collapsing…</span>}
+          {state === 'collapsed' && <span>Result: <strong>{outcome}</strong> — wavefunction collapsed. Run again — truly random (Math.random()).</span>}
+        </div>
+
+        <div style={{ marginTop: 12, display: 'flex', gap: 8, justifyContent: 'center' }}>
+          {state === 'collapsed' ? (
+            <button onClick={reset} style={{ padding: '8px 16px', borderRadius: 20, border: '2px solid #1f2937', background: '#fff', cursor: 'pointer', fontWeight: 600 }}>↺ New experiment</button>
+          ) : (
+            <button onClick={measure} disabled={state !== 'superposed'} style={{ padding: '8px 16px', borderRadius: 20, border: 'none', background: state === 'superposed' ? '#1f2937' : '#9ca3af', color: '#fff', cursor: state === 'superposed' ? 'pointer' : 'default', fontWeight: 600 }}>
+              {state === 'measuring' ? 'Measuring…' : 'Measure (open box)'}
+            </button>
+          )}
+          {total > 0 && <button onClick={() => setStats({ alive: 0, dead: 0 })} style={{ padding: '8px 12px', borderRadius: 20, border: '1px solid #d1d5db', background: '#fff', cursor: 'pointer', fontSize: 12 }}>Reset stats</button>}
+        </div>
+
+        {total > 0 && (
+          <div style={{ marginTop: 16, fontSize: 12, textAlign: 'left', maxWidth: 360, marginLeft: 'auto', marginRight: 'auto', background: '#f9fafb', borderRadius: 10, padding: '10px 14px' }}>
+            <div style={{ display: 'flex', justifyContent: 'space-between', fontWeight: 600 }}><span>Trials: {total}</span><span>Alive {stats.alive} · Dead {stats.dead}</span></div>
+            <div style={{ display: 'flex', gap: 4, marginTop: 6, height: 12, borderRadius: 6, overflow: 'hidden', background: '#e5e7eb' }}>
+              <div style={{ width: `${total ? (stats.alive / total) * 100 : 50}%`, background: '#10b981', transition: 'width 0.4s' }} />
+              <div style={{ flex: 1, background: '#ef4444', transition: 'width 0.4s' }} />
+            </div>
+            <div style={{ marginTop: 4, opacity: 0.6, fontSize: 11 }}>Expect ~50/50 — law of large numbers. Each collapse is independent.</div>
           </div>
         )}
-        {!done && picked > 0 && <button onClick={reset} style={{ marginTop: 10, fontSize: 12, background: 'none', border: 'none', textDecoration: 'underline', cursor: 'pointer', opacity: 0.6 }}>reset</button>}
       </div>
-      <style>{`@keyframes pop { from{transform:scale(0.8);opacity:0} to{transform:scale(1);opacity:1} }`}</style>
+      <style>{`@keyframes flicker{from{opacity:0.9;transform:scale(1)}to{opacity:1;transform:scale(1.02)}} @keyframes spin{to{transform:rotate(360deg)}} @keyframes pop{from{transform:scale(0.7)}to{transform:scale(1)}}`}</style>
     </Layout>
   )
 }
