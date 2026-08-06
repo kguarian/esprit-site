@@ -1,6 +1,7 @@
 import React from 'react'
 import { createRoot } from 'react-dom/client'
 import { BrowserRouter, Link, Route, Routes } from 'react-router-dom'
+import * as THREE from 'three'
 import './styles.css'
 
 function Layout({ title, children }) {
@@ -25,6 +26,51 @@ function Layout({ title, children }) {
       </main>
     </div>
   )
+}
+
+function PlanetNuke() {
+  const ref = React.useRef(null)
+  React.useEffect(() => {
+    const c = ref.current; if (!c) return
+    const renderer = new THREE.WebGLRenderer({ canvas: c, antialias: true, alpha: true })
+    const scene = new THREE.Scene()
+    const camera = new THREE.PerspectiveCamera(45, c.clientWidth / c.clientHeight, 0.1, 100)
+    camera.position.set(0, 0.6, 3.2)
+    renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2))
+    const resize = () => { renderer.setSize(c.clientWidth, c.clientHeight, false); camera.aspect = c.clientWidth / c.clientHeight; camera.updateProjectionMatrix() }
+    resize()
+    // earth
+    const earthGeo = new THREE.SphereGeometry(1.05, 64, 64)
+    const earthMat = new THREE.MeshStandardMaterial({ color: 0x1e3a8a, emissive: 0x0a1020, roughness: 0.85, metalness: 0.1 })
+    const earth = new THREE.Mesh(earthGeo, earthMat); scene.add(earth)
+    // atmosphere glow
+    const atmo = new THREE.Mesh(new THREE.SphereGeometry(1.12, 64, 64), new THREE.MeshBasicMaterial({ color: 0x60a5fa, transparent: true, opacity: 0.12, side: THREE.BackSide })); scene.add(atmo)
+    // nuke fire shell enveloping planet (hyperreal)
+    const fireGeo = new THREE.SphereGeometry(1.18, 64, 64)
+    const fireMat = new THREE.MeshBasicMaterial({ color: 0xff6b35, transparent: true, opacity: 0.55 })
+    const fire = new THREE.Mesh(fireGeo, fireMat); fire.scale.set(1, 0.85, 1); scene.add(fire)
+    const fire2 = new THREE.Mesh(new THREE.SphereGeometry(1.28, 64, 64), new THREE.MeshBasicMaterial({ color: 0xef4444, transparent: true, opacity: 0.28, side: THREE.BackSide })); scene.add(fire2)
+    // shockwave ring
+    const ring = new THREE.Mesh(new THREE.RingGeometry(1.35, 1.42, 64), new THREE.MeshBasicMaterial({ color: 0xfde68a, transparent: true, opacity: 0.45, side: THREE.DoubleSide })); ring.rotation.x = Math.PI/2; ring.position.y = -0.15; scene.add(ring)
+    const ring2 = new THREE.Mesh(new THREE.RingGeometry(1.55, 1.6, 64), new THREE.MeshBasicMaterial({ color: 0xfb923c, transparent: true, opacity: 0.22, side: THREE.DoubleSide })); ring2.rotation.x = Math.PI/2; ring2.position.y = -0.12; scene.add(ring2)
+    // lights
+    scene.add(new THREE.AmbientLight(0xffffff, 0.6))
+    const sun = new THREE.DirectionalLight(0xffffff, 1.2); sun.position.set(5, 3, 5); scene.add(sun)
+    const fireLight = new THREE.PointLight(0xff4500, 8, 6); fireLight.position.set(0.8, 0.8, 1.5); scene.add(fireLight)
+    // stars
+    const starGeo = new THREE.BufferGeometry(); const starPos = new Float32Array(600); for(let i=0;i<600;i++) starPos[i]=(Math.random()-0.5)*20; starGeo.setAttribute('position', new THREE.BufferAttribute(starPos,3)); const stars=new THREE.Points(starGeo, new THREE.PointsMaterial({color:0xffffff, size:0.02})); scene.add(stars)
+    let raf; const animate=()=>{
+      raf=requestAnimationFrame(animate)
+      earth.rotation.y+=0.0012; fire.rotation.y+=0.0018; fire2.rotation.y-=0.001; atmo.rotation.y+=0.0008
+      fire.material.opacity=0.52 + Math.sin(Date.now()*0.003)*0.08
+      fireLight.intensity=7 + Math.sin(Date.now()*0.004)*2
+      ring.scale.setScalar(1 + Math.sin(Date.now()*0.0015)*0.04)
+      renderer.render(scene,camera)
+    }; animate()
+    window.addEventListener('resize', resize)
+    return ()=>{ cancelAnimationFrame(raf); window.removeEventListener('resize', resize); renderer.dispose() }
+  }, [])
+  return <canvas ref={ref} style={{ position:'absolute', inset:0, width:'100%', height:'100%', display:'block' }} />
 }
 
 function OneOverF() {
@@ -265,6 +311,16 @@ function Avery() {
         </div>
 
         {/* main lab */}
+        {phase==='dead' ? (
+          <div style={{ gridColumn:'1 / -1', position:'relative', minHeight:560, borderRadius:20, overflow:'hidden', background:'#020208', border:'1px solid rgba(239,68,68,0.35)', boxShadow:'0 0 40px rgba(239,68,68,0.35), inset 0 0 80px rgba(0,0,0,0.9)' }}>
+            <PlanetNuke />
+            <div style={{ position:'absolute', bottom:18, left:'50%', transform:'translateX(-50%)', textAlign:'center', zIndex:8 }}>
+              <div className="mono" style={{ fontSize:13, letterSpacing:4, color:'#fecaca', textShadow:'0 2px 12px rgba(0,0,0,0.9)', fontWeight:700 }}>WORLD BURNS — FACILIS DESCENSUS AVERNO</div>
+              <div className="mono" style={{ fontSize:9, color:'#fed7aa', opacity:0.85, marginTop:4, maxWidth:420 }}>Hozier — Hymn to Virgil · “the road to hell is easy” — nuclear apocalypse enveloping Earth</div>
+              <button onClick={reset} className="avery-btn avery-btn-ghost" style={{ marginTop:12, background:'rgba(255,255,255,0.08)', borderColor:'rgba(254,249,195,0.3)', color:'#fef3c7' }}>↺ Reset — re-prepare |ψ⟩</button>
+            </div>
+          </div>
+        ) : (
         <div className="avery-main">
           {/* left: apparatus */}
           <div className="glass neon" style={{ borderRadius: 16, padding: 14, position: 'relative', overflow: 'hidden' }}>
@@ -430,6 +486,7 @@ function Avery() {
             </div>
           </div>
         </div>
+        )}
         </div>
       </div>
     </Layout>
