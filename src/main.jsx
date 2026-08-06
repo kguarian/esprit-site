@@ -31,53 +31,203 @@ function Layout({ title, children }) {
 function PlanetNuke() {
   const ref = React.useRef(null)
   React.useEffect(() => {
-    const c = ref.current; if (!c) return
-    const renderer = new THREE.WebGLRenderer({ canvas: c, antialias: true, alpha: true })
-    const scene = new THREE.Scene()
-    const camera = new THREE.PerspectiveCamera(45, c.clientWidth / c.clientHeight, 0.1, 100)
-    camera.position.set(0, 0.6, 3.2)
+    const canvas = ref.current
+    if (!canvas) return
+    const reduceMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches
+    const renderer = new THREE.WebGLRenderer({ canvas, antialias: true, alpha: true, powerPreference: 'high-performance' })
     renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2))
-    const resize = () => { renderer.setSize(c.clientWidth, c.clientHeight, false); camera.aspect = c.clientWidth / c.clientHeight; camera.updateProjectionMatrix() }
-    resize()
-    // earth
-    const earthGeo = new THREE.SphereGeometry(1.05, 64, 64)
-    const earthMat = new THREE.MeshStandardMaterial({ color: 0x1e3a8a, emissive: 0x0a1020, roughness: 0.85, metalness: 0.1 })
-    const earth = new THREE.Mesh(earthGeo, earthMat); scene.add(earth)
-    // atmosphere glow
-    const atmo = new THREE.Mesh(new THREE.SphereGeometry(1.12, 64, 64), new THREE.MeshBasicMaterial({ color: 0x60a5fa, transparent: true, opacity: 0.12, side: THREE.BackSide })); scene.add(atmo)
-    // mushroom cloud enveloping planet — hyperreal, obvious
-    const capGeo = new THREE.SphereGeometry(1.45, 64, 32, 0, Math.PI*2, 0, Math.PI*0.38)
-    const capMat = new THREE.MeshStandardMaterial({ color: 0xff6b35, emissive: 0x7c2d12, emissiveIntensity: 0.9, roughness: 0.9, transparent: true, opacity: 0.92 })
-    const cap = new THREE.Mesh(capGeo, capMat); cap.position.y = 0.95; cap.rotation.x = Math.PI; scene.add(cap)
-    const cap2 = new THREE.Mesh(new THREE.SphereGeometry(1.32, 64, 32, 0, Math.PI*2, 0, Math.PI*0.42), new THREE.MeshStandardMaterial({ color: 0xef4444, emissive: 0x450a0a, emissiveIntensity: 0.7, transparent: true, opacity: 0.55 })); cap2.position.y = 0.88; cap2.rotation.x = Math.PI; scene.add(cap2)
-    const stemGeo = new THREE.CylinderGeometry(0.22, 0.55, 1.9, 32)
-    const stemMat = new THREE.MeshStandardMaterial({ color: 0x7c2d12, emissive: 0xff6b35, emissiveIntensity: 0.6, transparent: true, opacity: 0.88 })
-    const stem = new THREE.Mesh(stemGeo, stemMat); stem.position.y = 0.15; scene.add(stem)
-    // fire shell for global burn (subtle under mushroom)
-    const fire = new THREE.Mesh(new THREE.SphereGeometry(1.18, 64, 64), new THREE.MeshBasicMaterial({ color: 0xff6b35, transparent: true, opacity: 0.28 })); fire.scale.set(1, 0.85, 1); scene.add(fire)
-    const fire2 = new THREE.Mesh(new THREE.SphereGeometry(1.35, 64, 64), new THREE.MeshBasicMaterial({ color: 0x450a0a, transparent: true, opacity: 0.35, side: THREE.BackSide })); scene.add(fire2)
-    // shockwave — more obvious
-    const ring = new THREE.Mesh(new THREE.RingGeometry(1.5, 1.62, 64), new THREE.MeshBasicMaterial({ color: 0xfde68a, transparent: true, opacity: 0.65, side: THREE.DoubleSide })); ring.rotation.x = Math.PI/2; ring.position.y = -0.15; scene.add(ring)
-    const ring2 = new THREE.Mesh(new THREE.RingGeometry(1.75, 1.85, 64), new THREE.MeshBasicMaterial({ color: 0xfb923c, transparent: true, opacity: 0.32, side: THREE.DoubleSide })); ring2.rotation.x = Math.PI/2; ring2.position.y = -0.12; scene.add(ring2)
-    const ring3 = new THREE.Mesh(new THREE.RingGeometry(2.0, 2.08, 64), new THREE.MeshBasicMaterial({ color: 0xef4444, transparent: true, opacity: 0.18, side: THREE.DoubleSide })); ring3.rotation.x = Math.PI/2; ring3.position.y = -0.1; scene.add(ring3)
-    // lights
-    scene.add(new THREE.AmbientLight(0xffffff, 0.6))
-    const sun = new THREE.DirectionalLight(0xffffff, 1.2); sun.position.set(5, 3, 5); scene.add(sun)
-    const fireLight = new THREE.PointLight(0xff4500, 8, 6); fireLight.position.set(0.8, 0.8, 1.5); scene.add(fireLight)
-    // stars
-    const starGeo = new THREE.BufferGeometry(); const starPos = new Float32Array(600); for(let i=0;i<600;i++) starPos[i]=(Math.random()-0.5)*20; starGeo.setAttribute('position', new THREE.BufferAttribute(starPos,3)); const stars=new THREE.Points(starGeo, new THREE.PointsMaterial({color:0xffffff, size:0.02})); scene.add(stars)
-    let raf; const animate=()=>{
+    renderer.toneMapping = THREE.ACESFilmicToneMapping
+    renderer.toneMappingExposure = 1.25
+
+    const scene = new THREE.Scene()
+    scene.fog = new THREE.FogExp2(0x030205, 0.038)
+    const camera = new THREE.PerspectiveCamera(42, 1, 0.1, 80)
+    camera.position.set(0, 0.08, 4.5)
+    const world = new THREE.Group()
+    world.position.y = .46
+    world.rotation.z = -0.18
+    scene.add(world)
+
+    let seed = 7421
+    const random = () => ((seed = (seed * 16807) % 2147483647) - 1) / 2147483646
+    const makeRadialTexture = (core, edge = 'rgba(0,0,0,0)') => {
+      const node = document.createElement('canvas'); node.width = node.height = 128
+      const ctx = node.getContext('2d')
+      const gradient = ctx.createRadialGradient(64,64,0,64,64,64)
+      gradient.addColorStop(0, '#fff'); gradient.addColorStop(0.08, core); gradient.addColorStop(0.34, 'rgba(255,70,12,.65)'); gradient.addColorStop(1, edge)
+      ctx.fillStyle = gradient; ctx.fillRect(0,0,128,128)
+      return new THREE.CanvasTexture(node)
+    }
+
+    // A hand-drawn, scorched equirectangular Earth texture keeps this scene self-contained.
+    const mapCanvas = document.createElement('canvas'); mapCanvas.width = 2048; mapCanvas.height = 1024
+    const map = mapCanvas.getContext('2d')
+    const ocean = map.createLinearGradient(0,0,0,1024)
+    ocean.addColorStop(0,'#07111d'); ocean.addColorStop(.45,'#062338'); ocean.addColorStop(1,'#04080e')
+    map.fillStyle = ocean; map.fillRect(0,0,2048,1024)
+    map.strokeStyle = 'rgba(109,164,180,.07)'; map.lineWidth = 1
+    for(let y=84;y<1024;y+=86){ map.beginPath(); map.moveTo(0,y); map.lineTo(2048,y); map.stroke() }
+    for(let x=0;x<2048;x+=128){ map.beginPath(); map.moveTo(x,0); map.lineTo(x,1024); map.stroke() }
+    const continents = [
+      [[95,280],[170,180],[330,152],[465,220],[520,330],[445,382],[390,465],[270,448],[198,370]],
+      [[430,450],[570,455],[650,555],[625,702],[552,866],[492,776],[472,610]],
+      [[790,182],[870,120],[962,145],[1008,230],[955,282],[850,270]],
+      [[930,290],[1070,255],[1190,330],[1160,470],[1080,610],[1015,785],[930,690],[890,518]],
+      [[1020,235],[1245,150],[1530,185],[1800,305],[1725,430],[1512,470],[1400,390],[1220,418],[1120,338]],
+      [[1575,650],[1720,612],[1838,685],[1785,800],[1645,824],[1550,742]],
+      [[845,850],[1200,875],[1540,842],[1800,895],[1640,950],[1050,958]]
+    ]
+    continents.forEach(points => {
+      map.beginPath(); points.forEach(([x,y],i)=>i?map.lineTo(x,y):map.moveTo(x,y)); map.closePath()
+      map.fillStyle='#19231f'; map.fill(); map.strokeStyle='rgba(226,124,67,.38)'; map.lineWidth=4; map.stroke()
+    })
+    const strikes = [[-118,34],[-74,40],[-46,-23],[2,48],[37,55],[31,30],[77,28],[116,39],[139,35],[151,-33],[18,-34]]
+    strikes.forEach(([lon,lat], index) => {
+      const x=(lon+180)/360*2048, y=(90-lat)/180*1024, radius=index%3===0?82:54
+      const scar=map.createRadialGradient(x,y,0,x,y,radius)
+      scar.addColorStop(0,'#fff7c2'); scar.addColorStop(.08,'#ff9a1f'); scar.addColorStop(.25,'#d52d09'); scar.addColorStop(.58,'rgba(92,15,4,.72)'); scar.addColorStop(1,'rgba(0,0,0,0)')
+      map.fillStyle=scar; map.fillRect(x-radius,y-radius,radius*2,radius*2)
+    })
+    for(let i=0;i<210;i++){
+      const x=random()*2048,y=250+random()*560
+      map.fillStyle=`rgba(255,${70+Math.floor(random()*100)},25,${.18+random()*.48})`
+      map.fillRect(x,y,1+random()*3,1+random()*3)
+    }
+    const earthTexture = new THREE.CanvasTexture(mapCanvas)
+    earthTexture.colorSpace = THREE.SRGBColorSpace
+    earthTexture.anisotropy = renderer.capabilities.getMaxAnisotropy()
+    const earth = new THREE.Mesh(
+      new THREE.SphereGeometry(1.18, 96, 96),
+      new THREE.MeshStandardMaterial({ map:earthTexture, roughness:.96, metalness:.02, emissive:0x210500, emissiveIntensity:.42 })
+    )
+    earth.rotation.y = -1.15
+    world.add(earth)
+
+    const fireUniforms = { uTime:{value:0}, uHeat:{value:.2} }
+    const fireShell = new THREE.Mesh(new THREE.SphereGeometry(1.205,96,96), new THREE.ShaderMaterial({
+      uniforms:fireUniforms, transparent:true, depthWrite:false, blending:THREE.AdditiveBlending,
+      vertexShader:`varying vec3 vN; varying vec3 vP; void main(){vN=normalize(normalMatrix*normal);vP=position;gl_Position=projectionMatrix*modelViewMatrix*vec4(position,1.);}`,
+      fragmentShader:`uniform float uTime; uniform float uHeat; varying vec3 vN; varying vec3 vP; void main(){float bands=sin(vP.x*31.+sin(vP.y*19.)+uTime*1.8)*sin(vP.y*27.-uTime);float cracks=smoothstep(.72,.96,bands);float rim=pow(1.-abs(vN.z),3.);vec3 c=mix(vec3(1.,.055,.005),vec3(1.,.68,.12),cracks);gl_FragColor=vec4(c,(cracks*.26+rim*.19)*uHeat);}`
+    }))
+    fireShell.rotation.y = earth.rotation.y
+    world.add(fireShell)
+
+    const smokeCanvas=document.createElement('canvas'); smokeCanvas.width=1024; smokeCanvas.height=512
+    const smoke=smokeCanvas.getContext('2d')
+    for(let i=0;i<420;i++){
+      const x=random()*1024,y=random()*512,r=6+random()*45
+      const g=smoke.createRadialGradient(x,y,0,x,y,r)
+      g.addColorStop(0,`rgba(38,20,18,${.06+random()*.13})`);g.addColorStop(1,'rgba(0,0,0,0)')
+      smoke.fillStyle=g;smoke.fillRect(x-r,y-r,r*2,r*2)
+    }
+    const smokeTexture=new THREE.CanvasTexture(smokeCanvas)
+    const smokeShell=new THREE.Mesh(new THREE.SphereGeometry(1.245,72,72),new THREE.MeshBasicMaterial({map:smokeTexture,transparent:true,opacity:.82,depthWrite:false,color:0x6d3027}))
+    smokeShell.rotation.y=earth.rotation.y+.2; world.add(smokeShell)
+
+    const atmosphere = new THREE.Mesh(new THREE.SphereGeometry(1.30,72,72), new THREE.ShaderMaterial({
+      transparent:true, side:THREE.BackSide, blending:THREE.AdditiveBlending, depthWrite:false,
+      vertexShader:`varying vec3 n;void main(){n=normalize(normalMatrix*normal);gl_Position=projectionMatrix*modelViewMatrix*vec4(position,1.);}`,
+      fragmentShader:`varying vec3 n;void main(){float i=pow(max(0.,.72-dot(n,vec3(0.,0.,1.))),3.2);gl_FragColor=vec4(1.,.11,.025,i*.72);}`
+    }))
+    world.add(atmosphere)
+
+    const impactTexture=makeRadialTexture('#fff3b0')
+    const impactSprites=[]
+    const normalAxis=new THREE.Vector3(0,0,1)
+    strikes.forEach(([lon,lat],index)=>{
+      const phi=THREE.MathUtils.degToRad(90-lat),theta=THREE.MathUtils.degToRad(lon+180)
+      const normal=new THREE.Vector3().setFromSphericalCoords(1,phi,theta)
+      const sprite=new THREE.Sprite(new THREE.SpriteMaterial({map:impactTexture,color:index<3?0xfff2a6:0xff4b0b,transparent:true,blending:THREE.AdditiveBlending,depthWrite:false,opacity:0}))
+      sprite.position.copy(normal).multiplyScalar(1.235);sprite.scale.setScalar(.07);sprite.userData={delay:index*.24,index};earth.add(sprite);impactSprites.push(sprite)
+      const ring=new THREE.Mesh(new THREE.RingGeometry(.035,.047,32),new THREE.MeshBasicMaterial({color:0xff6a13,transparent:true,opacity:0,side:THREE.DoubleSide,blending:THREE.AdditiveBlending,depthWrite:false}))
+      ring.position.copy(normal).multiplyScalar(1.224);ring.quaternion.setFromUnitVectors(normalAxis,normal);ring.userData={delay:index*.24,index};earth.add(ring);impactSprites.push(ring)
+    })
+
+    const starPositions=new Float32Array(5400)
+    for(let i=0;i<starPositions.length;i+=3){starPositions[i]=(random()-.5)*28;starPositions[i+1]=(random()-.5)*17;starPositions[i+2]=-3-random()*20}
+    const starGeometry=new THREE.BufferGeometry();starGeometry.setAttribute('position',new THREE.BufferAttribute(starPositions,3))
+    const stars=new THREE.Points(starGeometry,new THREE.PointsMaterial({color:0xdce9ff,size:.018,transparent:true,opacity:.7,sizeAttenuation:true}));scene.add(stars)
+
+    const emberPositions=new Float32Array(1800)
+    for(let i=0;i<emberPositions.length;i+=3){const r=1.35+random()*2.2,a=random()*Math.PI*2,z=(random()-.5)*1.4;emberPositions[i]=Math.cos(a)*r;emberPositions[i+1]=z;emberPositions[i+2]=Math.sin(a)*r}
+    const emberGeometry=new THREE.BufferGeometry();emberGeometry.setAttribute('position',new THREE.BufferAttribute(emberPositions,3))
+    const embers=new THREE.Points(emberGeometry,new THREE.PointsMaterial({color:0xff5a16,size:.018,transparent:true,opacity:.68,blending:THREE.AdditiveBlending,depthWrite:false}));scene.add(embers)
+
+    const flareTexture=makeRadialTexture('#ffdf91')
+    const flare=new THREE.Sprite(new THREE.SpriteMaterial({map:flareTexture,color:0xff2d08,transparent:true,opacity:.42,blending:THREE.AdditiveBlending,depthWrite:false}));flare.position.set(-3.4,1.5,-4);flare.scale.set(7,7,1);scene.add(flare)
+    const shockwaves=[0,1,2].map(index=>{
+      const ring=new THREE.Mesh(new THREE.RingGeometry(1.31,1.326,128),new THREE.MeshBasicMaterial({color:index===0?0xffe1a1:0xff3c0a,transparent:true,opacity:0,side:THREE.DoubleSide,blending:THREE.AdditiveBlending,depthWrite:false}));ring.position.y=.46;ring.userData.index=index;scene.add(ring);return ring
+    })
+
+    scene.add(new THREE.HemisphereLight(0x7f8aa6,0x140100,.55))
+    const dyingSun=new THREE.DirectionalLight(0xffd1a3,2.5);dyingSun.position.set(-4,2.8,5);scene.add(dyingSun)
+    const burnLight=new THREE.PointLight(0xff2d00,13,8,1.7);burnLight.position.set(1,-.25,2.3);scene.add(burnLight)
+
+    const clock=new THREE.Clock()
+    const resize=()=>{const w=canvas.clientWidth||1,h=canvas.clientHeight||1;renderer.setSize(w,h,false);camera.aspect=w/h;camera.updateProjectionMatrix()}
+    resize(); window.addEventListener('resize',resize)
+    let raf
+    const animate=()=>{
       raf=requestAnimationFrame(animate)
-      earth.rotation.y+=0.0012; cap.rotation.y+=0.003; cap2.rotation.y-=0.002; stem.rotation.y+=0.001; fire.rotation.y+=0.0018; fire2.rotation.y-=0.001; atmo.rotation.y+=0.0008
-      cap.material.opacity=0.88 + Math.sin(Date.now()*0.002)*0.06
-      fireLight.intensity=8 + Math.sin(Date.now()*0.003)*3
-      ring.scale.setScalar(1 + Math.sin(Date.now()*0.0012)*0.06); ring2.scale.setScalar(1 + Math.sin(Date.now()*0.0015)*0.04)
-      renderer.render(scene,camera)
-    }; animate()
-    window.addEventListener('resize', resize)
-    return ()=>{ cancelAnimationFrame(raf); window.removeEventListener('resize', resize); renderer.dispose() }
+      const t=clock.getElapsedTime(),motion=reduceMotion?0:.0014
+      earth.rotation.y+=motion;fireShell.rotation.y+=motion*.82;smokeShell.rotation.y-=motion*.32
+      fireUniforms.uTime.value=t;fireUniforms.uHeat.value=Math.min(1.35,.18+t*.22)
+      smokeShell.material.opacity=Math.min(.92,.38+t*.075)
+      impactSprites.forEach(item=>{const age=Math.max(0,t-item.userData.delay);if(item.isSprite){item.material.opacity=Math.min(1,age*2.4)*(.64+Math.sin(t*8+item.userData.index)*.24);item.scale.setScalar(.04+Math.min(.17,age*.045))}else{item.material.opacity=age>0?Math.max(0,.7-(age%2.1)/2.1):0;item.scale.setScalar(1+(age%2.1)*2.8)}})
+      shockwaves.forEach((ring,index)=>{const age=Math.max(0,t-index*.65);const cycle=age%4.2;ring.scale.setScalar(1+cycle*.52);ring.material.opacity=age>0?Math.max(0,.44-cycle*.105):0})
+      embers.rotation.z+=motion*.38;embers.rotation.y-=motion*.2
+      burnLight.intensity=10+Math.sin(t*5.4)*3.5+Math.sin(t*13)*1.2
+      camera.position.z=4.25+Math.min(.5,t*.035)
+      if(!reduceMotion){camera.position.x=Math.sin(t*19)*Math.max(0,.018-t*.002);camera.position.y=.08+Math.sin(t*14)*Math.max(0,.011-t*.001)}
+      camera.lookAt(0,0,0);renderer.render(scene,camera)
+    }
+    animate()
+    return()=>{
+      cancelAnimationFrame(raf);window.removeEventListener('resize',resize)
+      scene.traverse(object=>{object.geometry?.dispose();if(Array.isArray(object.material))object.material.forEach(material=>material.dispose());else object.material?.dispose()})
+      earthTexture.dispose();smokeTexture.dispose();impactTexture.dispose();flareTexture.dispose();renderer.dispose()
+    }
   }, [])
-  return <canvas ref={ref} style={{ position:'absolute', inset:0, width:'100%', height:'100%', display:'block' }} />
+  return <canvas ref={ref} aria-label="A burning Earth surrounded by global firestorms and ash" style={{ position:'absolute', inset:0, width:'100%', height:'100%', display:'block' }} />
+}
+
+function DoomsdayScene({ onReset }) {
+  const [elapsed,setElapsed]=React.useState(0)
+  React.useEffect(()=>{const started=Date.now();const id=setInterval(()=>setElapsed(Math.floor((Date.now()-started)/1000)),1000);return()=>clearInterval(id)},[])
+  const timestamp=`T+00:${String(elapsed).padStart(2,'0')}`
+  const ruins=[
+    {x:0,w:9,h:43},{x:7,w:7,h:31},{x:13,w:11,h:55},{x:22,w:6,h:36},{x:27,w:10,h:63,falling:true},{x:36,w:7,h:44},
+    {x:42,w:12,h:38},{x:53,w:8,h:57},{x:60,w:6,h:34},{x:65,w:12,h:69},{x:76,w:7,h:46},{x:82,w:11,h:58},{x:92,w:9,h:39}
+  ]
+  const flames=Array.from({length:34},(_,i)=>({x:(i*31)%101,size:22+(i*17)%58,delay:-((i*13)%24)/10}))
+  const meteors=Array.from({length:9},(_,i)=>({x:5+(i*19)%92,delay:-((i*7)%31)/10,scale:.55+(i%4)*.2}))
+  const ash=Array.from({length:46},(_,i)=>({x:(i*37)%101,delay:-((i*11)%53)/10,duration:3.5+(i%6)*.7}))
+  return (
+    <section className="doomsday" aria-live="polite">
+      <PlanetNuke />
+      <div className="doom-vignette" /><div className="doom-grain" /><div className="doom-scan" />
+      <div className="meteor-field" aria-hidden="true">{meteors.map((meteor,i)=><i key={i} className="meteor" style={{'--x':`${meteor.x}%`,'--delay':`${meteor.delay}s`,'--scale':meteor.scale}} />)}</div>
+      <div className="sky-blast sky-blast-one" aria-hidden="true" /><div className="sky-blast sky-blast-two" aria-hidden="true" />
+      <div className="ash-field" aria-hidden="true">{ash.map((particle,i)=><i key={i} style={{'--x':`${particle.x}%`,'--delay':`${particle.delay}s`,'--duration':`${particle.duration}s`}} />)}</div>
+      <div className="doom-topline mono">
+        <div><span className="doom-live" />PLANETARY EXTINCTION</div><div>{timestamp}</div>
+      </div>
+      <div className="city-destruction" aria-hidden="true">
+        <div className="smoke-column smoke-one" /><div className="smoke-column smoke-two" /><div className="smoke-column smoke-three" />
+        <div className="ruined-skyline">{ruins.map((ruin,i)=><i key={i} className={`ruin ruin-${i%3}${ruin.falling?' ruin-falling':''}`} style={{'--x':`${ruin.x}%`,'--w':`${ruin.w}%`,'--h':`${ruin.h}%`}}><b /></i>)}</div>
+        <svg className="broken-bridge" viewBox="0 0 1200 190" preserveAspectRatio="none">
+          <path d="M0 136 L176 130 L315 92 L452 124 L512 143 M688 147 L756 113 L910 100 L1035 132 L1200 139" />
+          <path d="M188 130 L188 35 M1008 132 L1008 38 M188 42 Q360 51 452 124 M1008 44 Q850 52 756 113" />
+          <path className="bridge-cable" d="M452 124 L512 182 M756 113 L690 180" />
+        </svg>
+        <div className="fireline">{flames.map((flame,i)=><i key={i} className="flame" style={{'--x':`${flame.x}%`,'--size':`${flame.size}px`,'--delay':`${flame.delay}s`}} />)}</div>
+      </div>
+      <div className="doom-end"><strong>THE END</strong><span className="mono">NO CITIES LEFT TO NAME</span></div>
+      <div className="doom-bottom">
+        <button onClick={onReset} className="doom-reset mono" aria-label="Reset the experiment">REWIND <span>↺</span></button>
+      </div>
+    </section>
+  )
 }
 
 function OneOverF() {
@@ -272,18 +422,23 @@ function Avery() {
         @supports not ((-webkit-backdrop-filter: blur(1px)) or (backdrop-filter: blur(1px))) { .glass{ background:rgba(15,23,42,0.88) } }
         .neon{box-shadow: 0 0 14px rgba(236,72,153,0.55), 0 0 36px rgba(6,182,212,0.32), inset 0 0 14px rgba(255,255,255,0.06)}
         .mono{font-family:'JetBrains Mono',ui-monospace,Menlo,monospace; letter-spacing:0.02em}
-        .burn{position:absolute; top:0; left:0; right:0; bottom:0; pointer-events:none; z-index:5; background: radial-gradient(700px 500px at 50% 105%, rgba(239,68,68,0.95), transparent 68%), radial-gradient(900px 600px at 50% 120%, rgba(251,146,60,0.55), transparent 75%), linear-gradient(180deg, transparent 30%, rgba(69,26,3,0.55) 100%); animation: burnIn 0.7s ease}
-        .ash{position:absolute; top:0; left:0; right:0; bottom:0; pointer-events:none; z-index:6; opacity:0.55; background-image: radial-gradient(1.5px 1.5px at 20% 30%, #fff 100%, transparent 0), radial-gradient(1px 1px at 40% 70%, #fecaca 100%, transparent 0), radial-gradient(1.2px 1.2px at 65% 20%, #fff 100%, transparent 0), radial-gradient(1px 1px at 80% 50%, #fed7aa 100%, transparent 0), radial-gradient(1.4px 1.4px at 10% 80%, #fff 100%, transparent 0); animation: ashFall 7s linear infinite}
         @keyframes shimmer{0%{background-position:-200% 0}100%{background-position:200% 0}}
         @keyframes float{0%,100%{transform:translateY(0)}50%{transform:translateY(-6px)}}
         @keyframes wave{0%{stroke-dashoffset:0}100%{stroke-dashoffset:40}}
         @keyframes glowPulse{0%{filter:drop-shadow(0 0 6px #ec4899)}50%{filter:drop-shadow(0 0 16px #06b6d4)}100%{filter:drop-shadow(0 0 6px #ec4899)}}
         @keyframes decayFlash{0%{opacity:0}15%{opacity:1}30%{opacity:0}100%{opacity:0}}
-        @keyframes burnIn{from{opacity:0}to{opacity:1}}
-        @keyframes ashFall{from{transform:translateY(-20px)}to{transform:translateY(20px)}}
-        @keyframes flickerWorld{0%,100%{opacity:0.9}50%{opacity:1}}
-        @keyframes mushroomRise{from{transform:translateY(40px) scale(0.7); opacity:0}to{transform:translateY(0) scale(1); opacity:0.95}}
-        @keyframes virgilFade{from{opacity:0; transform:translateY(8px)}to{opacity:0.85; transform:translateY(0)}}
+        @keyframes doomReveal{from{opacity:0;filter:brightness(3) saturate(0)}to{opacity:1;filter:brightness(1) saturate(1)}}
+        @keyframes doomFlash{0%{opacity:.9}5%{opacity:.06}10%{opacity:.32}16%,100%{opacity:0}}
+        @keyframes grainWalk{0%,100%{transform:translate(0,0)}25%{transform:translate(2%,-3%)}50%{transform:translate(-3%,1%)}75%{transform:translate(1%,3%)}}
+        @keyframes scanFall{from{transform:translateY(-12vh)}to{transform:translateY(112vh)}}
+        @keyframes liveBlink{50%{opacity:.28;box-shadow:0 0 2px #ff3b17}}
+        @keyframes signalDie{from{stroke-dashoffset:0}to{stroke-dashoffset:-110}}
+        @keyframes meteorFall{0%{transform:translate3d(0,-35vh,0) rotate(-32deg) scaleY(var(--scale));opacity:0}8%{opacity:1}72%,100%{transform:translate3d(-48vw,112vh,0) rotate(-32deg) scaleY(var(--scale));opacity:0}}
+        @keyframes blastPulse{0%,100%{transform:scale(.72);opacity:.4}50%{transform:scale(1.15);opacity:.95}}
+        @keyframes smokeBillow{0%{transform:translate3d(0,22%,0) scale(.75);opacity:.3}50%{transform:translate3d(-4%,-8%,0) scale(1.08);opacity:.75}100%{transform:translate3d(7%,-36%,0) scale(1.42);opacity:0}}
+        @keyframes flameDance{0%,100%{transform:rotate(42deg) scale(1,.92);filter:brightness(.9)}35%{transform:rotate(49deg) scale(.82,1.18);filter:brightness(1.5)}70%{transform:rotate(37deg) scale(1.14,.78)}}
+        @keyframes cityCollapse{0%,46%{transform:rotate(0) translate(0,0)}72%,100%{transform:rotate(14deg) translate(9px,12px)}}
+        @keyframes ashDrift{0%{transform:translate3d(0,-8vh,0) rotate(0);opacity:0}15%{opacity:.9}100%{transform:translate3d(-14vw,108vh,0) rotate(480deg);opacity:0}}
         .avery-shell{max-width:1280px; margin:0 auto; position:relative; z-index:2; padding:0 20px}
         .avery-main{display:grid; grid-template-columns: 1.45fr 0.9fr; gap:20px; padding:20px 0 0}
         .avery-title{font-size: clamp(22px, 2.6vw, 30px); font-weight:800; letter-spacing:-0.04em; line-height:1.05}
@@ -293,14 +448,37 @@ function Avery() {
         .avery-btn-primary:hover{box-shadow: 0 8px 28px rgba(236,72,153,0.6), 0 0 0 3px rgba(236,72,153,0.18)}
         .avery-btn-ghost{color:#e2e8f0; background:rgba(255,255,255,0.06); border:1px solid rgba(255,255,255,0.12)}
         .avery-btn-ghost:hover{background:rgba(255,255,255,0.10)}
+        .avery-dead-root{padding:0;min-height:calc(100vh - 140px);background:#030205}
+        .avery-dead-root .avery-shell{max-width:none;padding:0}
+        .doomsday{position:relative;min-height:clamp(650px,calc(100vh - 140px),920px);overflow:hidden;background:radial-gradient(circle at 50% 40%,#27100d,#030205 60%);color:#f4e8df;isolation:isolate;animation:doomReveal 1.2s cubic-bezier(.2,.8,.2,1)}
+        .doomsday:before{content:"";position:absolute;inset:0;z-index:2;pointer-events:none;background:#fff;animation:doomFlash 2.4s ease-out forwards}
+        .doom-vignette{position:absolute;inset:-2px;z-index:2;pointer-events:none;background:radial-gradient(ellipse 70% 65% at 51% 44%,transparent 28%,rgba(3,1,2,.36) 66%,rgba(3,1,2,.96) 100%),linear-gradient(180deg,rgba(2,1,2,.6),transparent 25%,transparent 66%,rgba(2,1,2,.9))}
+        .doom-grain{position:absolute;inset:-40%;z-index:3;pointer-events:none;opacity:.11;background-image:url("data:image/svg+xml,%3Csvg viewBox='0 0 180 180' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.85' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='.7'/%3E%3C/svg%3E");animation:grainWalk .25s steps(2) infinite}
+        .doom-scan{position:absolute;z-index:4;left:0;right:0;height:14vh;pointer-events:none;background:linear-gradient(180deg,transparent,rgba(255,104,50,.055),transparent);animation:scanFall 7s linear infinite}
+        .doom-topline{position:absolute;z-index:8;top:0;left:0;right:0;padding:22px 26px;display:flex;justify-content:space-between;gap:18px;border-bottom:1px solid rgba(255,185,143,.12);background:linear-gradient(180deg,rgba(3,1,2,.6),transparent);font-size:9px;letter-spacing:.22em;color:rgba(255,222,202,.68)}
+        .doom-live{display:inline-block;width:6px;height:6px;border-radius:50%;margin-right:9px;background:#ff3b17;box-shadow:0 0 12px #ff3b17;animation:liveBlink .8s infinite}
+        .meteor-field,.ash-field{position:absolute;inset:0;z-index:5;overflow:hidden;pointer-events:none}.meteor{position:absolute;left:var(--x);top:-18vh;width:3px;height:24vh;border-radius:50%;background:linear-gradient(180deg,transparent 0,#ff4a18 72%,#fff1ba 100%);box-shadow:0 0 9px #ff3c0c,0 0 25px rgba(255,73,16,.8);transform-origin:bottom;animation:meteorFall 3.4s var(--delay) linear infinite}.meteor:after{content:"";position:absolute;bottom:-5px;left:-5px;width:13px;height:13px;border-radius:50%;background:#fff4bc;box-shadow:0 0 18px 8px #ff3b0a}
+        .sky-blast{position:absolute;z-index:4;width:clamp(90px,14vw,190px);aspect-ratio:1;border-radius:50%;pointer-events:none;background:radial-gradient(circle,#fff9cf 0 4%,#ffae27 10%,rgba(255,48,5,.92) 24%,rgba(116,13,3,.55) 49%,transparent 72%);filter:blur(.3px) drop-shadow(0 0 22px #ff2c00);animation:blastPulse 1.5s ease-in-out infinite}.sky-blast:after{content:"";position:absolute;inset:36%;border-radius:46% 54% 43% 57%;background:#fff;box-shadow:0 -28px 32px #ff5a0a,28px 15px 28px #ff2a00,-24px 19px 33px #ff7a11}.sky-blast-one{left:8%;top:28%}.sky-blast-two{right:9%;top:17%;transform:scale(.62);animation-delay:-.7s}
+        .ash-field i{position:absolute;left:var(--x);top:-2%;width:3px;height:7px;background:#d58455;box-shadow:0 0 5px #ff5128;animation:ashDrift var(--duration) var(--delay) linear infinite}.ash-field i:nth-child(3n){width:5px;height:2px;background:#5f514d;box-shadow:none}.ash-field i:nth-child(4n){background:#ffd0a2}
+        .city-destruction{position:absolute;z-index:6;left:0;right:0;bottom:0;height:58%;pointer-events:none;background:linear-gradient(0deg,rgba(3,1,1,.98) 0,rgba(25,4,2,.76) 16%,transparent 62%)}
+        .city-destruction:before{content:"";position:absolute;left:-10%;right:-10%;bottom:19%;height:30%;background:radial-gradient(ellipse at center,rgba(255,75,8,.66),rgba(128,15,2,.28) 38%,transparent 69%);filter:blur(18px)}
+        .ruined-skyline{position:absolute;z-index:2;inset:0 0 9%}.ruin{position:absolute;left:var(--x);bottom:0;width:var(--w);height:var(--h);display:block;transform-origin:bottom right;background:linear-gradient(90deg,#050303,#16100e 48%,#030202);border-left:1px solid rgba(255,102,48,.18);filter:drop-shadow(0 0 12px rgba(0,0,0,.95));clip-path:polygon(0 12%,10% 8%,18% 13%,27% 2%,38% 9%,48% 4%,58% 16%,70% 7%,79% 12%,88% 4%,100% 14%,100% 100%,0 100%)}.ruin-1{clip-path:polygon(0 5%,16% 15%,29% 7%,43% 18%,58% 3%,72% 14%,86% 9%,100% 19%,100% 100%,0 100%)}.ruin-2{clip-path:polygon(0 17%,13% 10%,24% 20%,37% 5%,52% 13%,66% 3%,81% 18%,100% 8%,100% 100%,0 100%)}.ruin b{position:absolute;inset:17% 14% 8%;opacity:.72;background:repeating-linear-gradient(90deg,transparent 0 9px,rgba(255,85,19,.7) 10px 13px,transparent 14px 21px),repeating-linear-gradient(0deg,transparent 0 13px,rgba(255,181,72,.2) 14px 18px,transparent 19px 28px);mix-blend-mode:screen;filter:drop-shadow(0 0 4px #ff3c00)}.ruin b:after{content:"";position:absolute;inset:0;background:linear-gradient(115deg,transparent 45%,#050303 46% 59%,transparent 60%),linear-gradient(70deg,transparent 55%,#080504 56% 68%,transparent 69%)}.ruin-falling{animation:cityCollapse 8s 1.4s cubic-bezier(.5,0,.8,1) forwards}
+        .smoke-column{position:absolute;z-index:1;bottom:9%;width:28%;height:95%;border-radius:50%;opacity:.45;background:radial-gradient(circle at 50% 75%,#2f1711 0 17%,rgba(31,23,22,.9) 31%,rgba(8,7,8,.7) 52%,transparent 72%);filter:blur(13px);animation:smokeBillow 7s ease-out infinite}.smoke-column:after{content:"";position:absolute;inset:4% 20% 35%;border-radius:50%;background:#160e0d;box-shadow:40px -25px 42px #211513,-35px -60px 50px #0b0909}.smoke-one{left:8%}.smoke-two{left:39%;animation-delay:-3.2s;transform:scale(1.2)}.smoke-three{right:3%;animation-delay:-5.4s;transform:scale(.82)}
+        .broken-bridge{position:absolute;z-index:3;left:-2%;bottom:5%;width:104%;height:27%;overflow:visible;filter:drop-shadow(0 4px 5px #000)}.broken-bridge path{fill:none;stroke:#0a0706;stroke-width:15;vector-effect:non-scaling-stroke;stroke-linecap:square}.broken-bridge path:nth-child(2){stroke-width:6}.broken-bridge .bridge-cable{stroke:#24100b;stroke-width:3}
+        .fireline{position:absolute;z-index:4;left:-3%;right:-3%;bottom:-5%;height:33%;background:radial-gradient(ellipse at 50% 110%,#ffd65a 0,#ff5a09 24%,rgba(158,18,2,.86) 47%,transparent 72%);filter:drop-shadow(0 -8px 18px rgba(255,47,0,.75))}.flame{position:absolute;left:var(--x);bottom:8%;width:var(--size);height:calc(var(--size) * 1.65);display:block;border-radius:75% 8% 68% 45%;background:linear-gradient(135deg,#fff7bd 0 14%,#ffae19 32%,#ff3208 68%,rgba(111,8,0,.2));box-shadow:0 0 12px #ff4a0a;transform-origin:50% 100%;animation:flameDance .48s var(--delay) ease-in-out infinite}
+        .doom-end{position:absolute;z-index:7;left:clamp(20px,5vw,68px);top:17%;display:flex;flex-direction:column;color:#fff1e8;text-shadow:0 3px 24px #000}.doom-end strong{font-family:Impact,'Arial Black',sans-serif;font-size:clamp(42px,7vw,94px);line-height:.85;letter-spacing:-.045em}.doom-end span{margin-top:12px;font-size:8px;letter-spacing:.36em;color:#ff9b73}
+        .doom-bottom{position:absolute;z-index:10;right:20px;bottom:18px}
+        .doom-reset{flex:none;padding:13px 15px;border:1px solid rgba(255,151,108,.38);background:rgba(28,6,4,.46);color:#ffc1a6;font-size:8px;letter-spacing:.2em;cursor:pointer;transition:.2s ease}.doom-reset:hover{background:#ff4a1f;color:#120301;border-color:#ff4a1f;box-shadow:0 0 30px rgba(255,69,25,.35)}.doom-reset span{margin-left:12px;font-size:13px}
         @media (max-width: 960px){ .avery-main{grid-template-columns:1fr} .avery-shell{max-width:720px} }
-        @media (max-width: 640px){ .avery-root{border-radius:12px; margin:-0.75rem -0.75rem 0} .avery-title{font-size:22px} }
+        @media (max-width: 760px){.doomsday{min-height:720px}.doom-topline{padding:17px 18px;font-size:7px}.doom-end{top:13%;left:18px}.doom-end span{font-size:6px}.city-destruction{height:54%}.sky-blast-one{left:-4%;top:32%}.sky-blast-two{right:-2%;top:24%}.doom-bottom{right:12px;bottom:12px}.doom-reset{padding:10px 12px}.ruin b{background-size:16px 24px}.broken-bridge{height:22%}}
+        @media (max-width: 640px){ .avery-root{border-radius:12px; margin:-0.75rem -0.75rem 0} .avery-dead-root{border-radius:0}.avery-title{font-size:22px} }
+        @media (prefers-reduced-motion:reduce){.doomsday,.doomsday:before,.doom-grain,.doom-scan,.doom-live,.meteor,.sky-blast,.ash-field i,.smoke-column,.flame,.ruin-falling{animation:none!important}.doom-grain{display:none}}
       `}</style>
-      <div className="avery-root">
-        <div className="avery-bg" /><div className="avery-grid" />{phase==='dead' && <><div className="burn" /><div className="ash" /><div style={{ position:'absolute', top:'42%', left:'50%', transform:'translate(-50%,-50%)', zIndex:7, pointerEvents:'none', animation:'mushroomRise 0.9s ease' }}><svg width={180} height={180} viewBox="0 0 200 200"><ellipse cx={100} cy={42} rx={58} ry={28} fill="rgba(251,146,60,0.95)" stroke="#fff" strokeWidth={0.8} opacity={0.95} /><ellipse cx={100} cy={58} rx={42} ry={18} fill="rgba(239,68,68,0.9)" /><ellipse cx={100} cy={74} rx={28} ry={12} fill="rgba(254,249,195,0.95)" /><rect x={92} y={70} width={16} height={70} rx={4} fill="rgba(120,53,15,0.9)" /><ellipse cx={100} cy={148} rx={38} ry={8} fill="rgba(239,68,68,0.45)" /></svg><div className="mono" style={{ textAlign:'center', marginTop:6, fontSize:8, letterSpacing:2, color:'#fecaca', opacity:0.9, textShadow:'0 1px 8px rgba(0,0,0,0.9)' }}>FACILIS DESCENSUS AVERNO</div><div className="mono" style={{ textAlign:'center', fontSize:7, color:'#fed7aa', opacity:0.75 }}>Hozier — Hymn to Virgil · nuclear hymn</div></div></>}
+      <div className={`avery-root ${phase==='dead'?'avery-dead-root':''}`}>
+        {phase!=='dead' && <><div className="avery-bg" /><div className="avery-grid" /></>}
         <div className="avery-shell">
         {/* header */}
-        <div style={{ padding: '18px 18px 0', display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', flexWrap: 'wrap', gap: 12 }}>
+        {phase!=='dead' && <div style={{ padding: '18px 18px 0', display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', flexWrap: 'wrap', gap: 12 }}>
           <div>
             <div className="mono" style={{ fontSize: 10, letterSpacing: 3, opacity: 0.7, color: '#22d3ee' }}>AVERY LAB // SCHRÖDINGER PROTOCOL</div>
             <div className="avery-title" style={{ background: 'linear-gradient(90deg,#f472b6,#22d3ee,#a78bfa)', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent' }}>The Cat Experiment</div>
@@ -315,18 +493,11 @@ function Avery() {
             </div>
             <div className="mono" style={{ fontSize: 10, opacity: 0.6 }}>P(alive)=P(dead)=50% · t½={halfLife}s · HFS</div>
           </div>
-        </div>
+        </div>}
 
         {/* main lab */}
         {phase==='dead' ? (
-          <div style={{ gridColumn:'1 / -1', position:'relative', minHeight:560, borderRadius:20, overflow:'hidden', background:'#020208', border:'1px solid rgba(239,68,68,0.35)', boxShadow:'0 0 40px rgba(239,68,68,0.35), inset 0 0 80px rgba(0,0,0,0.9)' }}>
-            <PlanetNuke />
-            <div style={{ position:'absolute', bottom:18, left:'50%', transform:'translateX(-50%)', textAlign:'center', zIndex:8 }}>
-              <div className="mono" style={{ fontSize:13, letterSpacing:4, color:'#fecaca', textShadow:'0 2px 12px rgba(0,0,0,0.9)', fontWeight:700 }}>WORLD BURNS — FACILIS DESCENSUS AVERNO</div>
-              <div className="mono" style={{ fontSize:9, color:'#fed7aa', opacity:0.85, marginTop:4, maxWidth:420 }}>Hozier — Hymn to Virgil · “the road to hell is easy” — nuclear apocalypse enveloping Earth</div>
-              <button onClick={reset} className="avery-btn avery-btn-ghost" style={{ marginTop:12, background:'rgba(255,255,255,0.08)', borderColor:'rgba(254,249,195,0.3)', color:'#fef3c7' }}>↺ Reset — re-prepare |ψ⟩</button>
-            </div>
-          </div>
+          <DoomsdayScene onReset={reset} />
         ) : (
         <div className="avery-main">
           {/* left: apparatus */}
