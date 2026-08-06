@@ -6,6 +6,9 @@
 - [x] `ml/` added — algo-trading + ML distinct from `code/` (e306acb)
 - [x] Routes wired in `src/main.jsx` nav + `<Routes>` (/, kenton, avery, ml, code, links, contact, more)
 - [x] Build pipeline: `build.py` + `Makefile` (kickass UI, logs `.build-logs/<ts>.log` + history.jsonl, preserves CNAME/.nojekyll, copies dist→docs + 404 fallback) — no build.sh redundancy
+- [x] Home archipelago: 2400×1600 sepia-indigo world, no banner, camera follow, hooked lots, edge→avery, fully zoomed capture (959050f)
+
+- [x] CODEX_NEXT.md created — deferred: every page becomes a labeled map following central sepia theme (including Avery), homepage called out via HOME portal on each map. See `CODEX_NEXT.md` for per-route maps + hook contract.
 
 - [ ] Optional: clean untracked screenshots `Pasted*.png` from root/src, decide on `commit_log.md`/`steps_taken.md` commit policy
-- [ ] Optional: add error boundary for route errors, add `ml` content beyond scaffold
+- [ ] Optional: add error boundary for route errors
