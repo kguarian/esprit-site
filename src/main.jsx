@@ -65,14 +65,14 @@ function Kenton() {
               </div>
               <div style={{ position:'relative' }}>
                 <div className="kglass" style={{ borderRadius:20, overflow:'hidden', position:'relative' }}>
-                  <img src="https://images.unsplash.com/photo-1507413245164-6160d8298b31?w=900&q=80&auto=format&fit=crop" alt="Oscilloscope signals — neural oscillations" style={{ width:'100%', height:320, objectFit:'cover', display:'block' }} loading="lazy" />
+                  <div style={{ width:'100%', height:320, background:'linear-gradient(135deg,#e0e7ff 0%, #f0f9ff 100%)', display:'flex', alignItems:'center', justifyContent:'center', color:'#6366f1', fontSize:14 }} className="mono">signal · FFT · 1/f</div>
                   <div style={{ position:'absolute', bottom:10, left:10, right:10, display:'flex', gap:8, flexWrap:'wrap' }}>
                     <span className="kglass mono" style={{ fontSize:10, padding:'6px 10px', borderRadius:999 }}>NEURAL OSCILLATIONS</span>
                     <span className="kglass mono" style={{ fontSize:10, padding:'6px 10px', borderRadius:999 }}>SPECTRAL ANALYSIS · FFT</span>
                   </div>
                 </div>
                 <div className="kglass" style={{ position:'absolute', bottom:-16, left:-8, borderRadius:14, padding:'10px 12px', display:'flex', gap:10, alignItems:'center', maxWidth:280 }}>
-                  <img src="https://images.unsplash.com/photo-1497366216548-37526070297c?w=300&q=80&auto=format&fit=crop" alt="UC San Diego Geisel Library exterior" style={{ width:54, height:54, borderRadius:10, objectFit:'cover' }} loading="lazy" />
+                  <div style={{ width:54, height:54, borderRadius:10, background:'linear-gradient(135deg,#6366f1,#06b6d4)', display:'flex', alignItems:'center', justifyContent:'center', color:'#fff', fontWeight:700, fontSize:12 }}>UCSD</div>
                   <div><div style={{ fontWeight:700, fontSize:13 }}>UC San Diego</div><div className="mono" style={{ fontSize:10, color:'#64748b' }}>B.S. Math-CS · Provost Honors · PATHS/Golden Pyramid</div></div>
                 </div>
               </div>
@@ -120,7 +120,7 @@ function Kenton() {
           </div>
           <div style={{ display:'flex', flexDirection:'column', gap:16 }}>
             <div className="kglass" style={{ borderRadius:16, overflow:'hidden' }}>
-              <img src="https://images.unsplash.com/photo-1551288049-bebda4e38f71?w=900&q=80&auto=format&fit=crop" alt="Data charts and trading" style={{ width:'100%', height:150, objectFit:'cover' }} loading="lazy" />
+              <div style={{ width:'100%', height:36, background:'linear-gradient(90deg,#f1f5f9,#e0e7ff)' }} />
               <div style={{ padding:14 }}>
                 <div style={{ fontWeight:700 }}>Selected Projects</div>
                 <ul style={{ margin:'6px 0 0', paddingLeft:16, fontSize:13, color:'#475569', lineHeight:1.6 }}>
@@ -132,7 +132,7 @@ function Kenton() {
               </div>
             </div>
             <div className="kglass" style={{ borderRadius:16, overflow:'hidden' }}>
-              <img src="https://images.unsplash.com/photo-1507537297725-24a1c029d3ca?w=900&q=80&auto=format&fit=crop" alt="La Jolla coast, San Diego" style={{ width:'100%', height:150, objectFit:'cover' }} loading="lazy" />
+              <div style={{ width:'100%', height:36, background:'linear-gradient(90deg,#ecfeff,#f0f9ff)' }} />
               <div style={{ padding:12 }}>
                 <div style={{ fontWeight:700, fontSize:14 }}>San Diego · La Jolla</div>
                 <div style={{ fontSize:12, color:'#64748b' }}>UC San Diego Math-CS — Data Science, Neural Data Science, Stats, Algorithms</div>
