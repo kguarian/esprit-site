@@ -1,0 +1,8 @@
+# steps_taken
+
+- 2026-07-27: Repo is static GH Pages, root-deployed, `.react-dev/` gitignored for React scratch.
+- 2026-07-28: Discussed layout to make filesystem root a React dev dir while pushed tree stays GH Pages-compatible. Plans A/B/C drafted, no filesystem moves yet.
+- 2026-07-28: Added model-context fallbacks: `core_goal.md`, `next_steps.md` (this log + `commit_log.md` pending).
+- 2026-08-05: Plan A selected. Promoted `.react-dev/` to filesystem root: `package.json`, `vite.config.js`, `src/` at `my-esprit.com/` (verified `ls package.json`). Updated `.gitignore` to keep dev root outside Pages until `core.worktree=site` is set. `.git` remains read-only in sandbox, so `git mv ... site/` + `core.worktree=site` is pending outside sandbox — blocked with `Operation not permitted`.
+- 2026-08-05: Fixed `core.worktree=site` blocker (`.git/config` manual edit), committed `d70f3f0` (move to `site/`, restyle) and pushed. Moved `site/`→`docs/` (`dc5a08a`) for GH Pages `/docs`. Built React SPA to `docs/` (added `index.html` entry, `vite.config outDir docs`, `a86cd13`) and set Pages source `main/docs` via `gh api` (PUT `{"source":{"branch":"main","path":"/docs"}}`) — now `built` with `my-esprit.com` cert.
+- 2026-08-05: Added `build.py` + `Makefile` (colored UI, 4 steps, per-run logs `.build-logs/<ts>.log` + `latest.log` + `history.jsonl`, preserves CNAME/.nojekyll, `dist→docs` + `404` fallback). Removed `build.sh` redundancy, fixed `.gitignore` dup, fixed `latest.log` flush bug. Commits `4c13447`, `e306acb` (avery/ml), `a8e11ef` (daisy), `0896194` (q-phys), `bfcc704` (liquid-glass lab), `7756151` (Safari `inset`/`@import`/ZWJ), `8d5c872` (λt JSX), `82ad558`/`d63b4ea` (14" stellar: 760→1180 breakout, full-bleed, 44px hits, clamp title).
