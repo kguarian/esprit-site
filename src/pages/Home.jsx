@@ -39,7 +39,7 @@ export function Home() {
       if(keys.has('arrowdown')||keys.has('s')) dy+=speed
       if(dx||dy) setPos(p=>{
         let nx=Math.max(24,Math.min(WORLD.w-24,p.x+dx)), ny=Math.max(24,Math.min(WORLD.h-24,p.y+dy))
-        if(nx<=28||nx>=WORLD.w-28||ny<=28||ny>=WORLD.h-28){ setEdge(true); setTimeout(()=> window.location.href='/avery', 260) }
+        if(nx<=28||nx>=WORLD.w-28||ny<=28||ny>=WORLD.h-28){ setEdge(true); setTimeout(()=> window.location.href='/avery', 260) } // hollow (secret, no label)
         return {x:nx,y:ny}
       })
       raf=requestAnimationFrame(loop)
@@ -83,7 +83,7 @@ export function Home() {
   return (
     <div ref={wrapRef} tabIndex={0} onKeyDown={e=>{ if(e.key==='Enter' || e.key===' ') { e.preventDefault(); const h=LOCS.find(l=>l.id===active); if(h?.href) window.location.href=h.href } }} style={{margin:'-24px -24px 0', background:PALETTE.paper, color:PALETTE.ink, height:'100dvh', minHeight:'100dvh', position:'relative', overflow:'hidden', filter:'sepia(0.38) saturate(0.82)', outline:'none'}} onWheel={e=>e.preventDefault()}>
       <style>{`html,body{overscroll-behavior:none} @keyframes drift{from{transform:translateX(-240px)}to{transform:translateX(2640px)}} @keyframes flash{0%,49%{fill:#9A8E7A}50%,100%{fill:#7E8FA3}} .flash{animation:flash 0.28s steps(1) infinite} .ink{stroke:#0A0A0B; stroke-linecap:round; stroke-linejoin:round} @keyframes bob{0%,100%{transform:translateY(0)}50%{transform:translateY(-2px)}}`}</style>
-      {edge && <div style={{position:'absolute', inset:0, zIndex:20, display:'flex', alignItems:'center', justifyContent:'center', background:'rgba(10,10,11,0.78)', color:'#F5EED8', fontFamily:'JetBrains Mono,monospace', fontSize:20, letterSpacing:5}}>EDGE → AVERY…</div>}
+      {edge && <div style={{position:'absolute', inset:0, zIndex:20, display:'flex', alignItems:'center', justifyContent:'center', background:'rgba(10,10,11,0.78)', color:'#F5EED8', fontFamily:'JetBrains Mono,monospace', fontSize:20, letterSpacing:5}}>EDGE → HOLLOW…</div>}
       <svg viewBox={`${viewX} ${viewY} ${vbW} ${vbH}`} style={{width:'100%', height:'100dvh', display:'block'}} onClick={e=>{
         const r=e.currentTarget.getBoundingClientRect()
         const w=toWorld(e.clientX,e.clientY,r)
@@ -140,14 +140,19 @@ export function Home() {
         {/* player */}
         <g transform={`translate(${pos.x},${pos.y})`} style={{animation:'bob 0.9s ease-in-out infinite'}}>
           <ellipse cx="0" cy="16" rx="11" ry="4.5" fill="rgba(0,0,0,0.22)" />
-          <rect x="-10" y="-16" width="20" height="20" rx="7" fill="#0A0A0B" stroke="#F5EED8" strokeWidth="1.3" />
-          <circle cx="0" cy="-7" r="5.5" fill="#F5EED8" stroke="#0A0A0B" strokeWidth="1.7" />
-          <text x="0" y="-4.5" textAnchor="middle" fontSize="7.5">◉</text>
+          <ellipse cx="-6" cy="-12" rx="5" ry="5.5" fill="#0A0A0B" stroke="#F5EED8" strokeWidth="1.4" />
+          <ellipse cx="6" cy="-12" rx="5" ry="5.5" fill="#0A0A0B" stroke="#F5EED8" strokeWidth="1.4" />
+          <ellipse cx="-6" cy="-12" rx="2.2" ry="2.6" fill="#F5EED8" />
+          <ellipse cx="6" cy="-12" rx="2.2" ry="2.6" fill="#F5EED8" />
+          <rect x="-9" y="-10" width="18" height="16" rx="8" fill="#0A0A0B" stroke="#F5EED8" strokeWidth="1.3" />
+          <circle cx="0" cy="-4" r="4.5" fill="#F5EED8" stroke="#0A0A0B" strokeWidth="1.2" />
+          <circle cx="-1.8" cy="-4.5" r="0.9" fill="#0A0A0B" /><circle cx="1.8" cy="-4.5" r="0.9" fill="#0A0A0B" />
+          <path d="M -3 2 Q 6 6 10 3" stroke="#0A0A0B" strokeWidth="1.2" fill="none" strokeLinecap="round" />
         </g>
         {/* world border hint */}
         <g opacity="0.42" fontFamily="JetBrains Mono,monospace" fontSize="8" fill="#0A0A0B" textAnchor="middle">
-          <text x={WORLD.w/2} y="22">— NORTH EDGE → AVERY —</text><text x={WORLD.w/2} y={WORLD.h-14}>— SOUTH EDGE → AVERY —</text>
-          <text x="18" y={WORLD.h/2} transform={`rotate(-90 18 ${WORLD.h/2})`}>WEST EDGE → AVERY</text><text x={WORLD.w-18} y={WORLD.h/2} transform={`rotate(90 ${WORLD.w-18} ${WORLD.h/2})`}>EAST EDGE → AVERY</text>
+          <text x={WORLD.w/2} y="22">— NORTH EDGE → HOLLOW —</text><text x={WORLD.w/2} y={WORLD.h-14}>— SOUTH EDGE → HOLLOW —</text>
+          <text x="18" y={WORLD.h/2} transform={`rotate(-90 18 ${WORLD.h/2})`}>WEST EDGE → HOLLOW</text><text x={WORLD.w-18} y={WORLD.h/2} transform={`rotate(90 ${WORLD.w-18} ${WORLD.h/2})`}>EAST EDGE → HOLLOW</text>
         </g>
       </svg>
       {/* HUD - no banner, just controls + lore */}

@@ -16,7 +16,7 @@
 ## Current homepage state (`src/main.jsx:Home`)
 - World `2400×1600`, camera lerps 0.08 toward player, `viewBox 1000×650` tracking `viewX/viewY`.
 - 6 portals: CABIN→/kenton, STORE→/links, THEATRE→/ml, MILL→/code, POST→/contact, SHED→/more. 4 hook lots `HOOK_NORTH/EAST/SOUTH/WEST` dashed `8 6` for Codex.
-- Player WASD/arrows 9px/tick rAF + click-to-walk via viewport mapping, proximity ±22px activates, Enter/Space enters, world edge warp → `/avery`.
+- Player WASD/arrows 9px/tick rAF + click-to-walk via viewport mapping, proximity ±22px activates, Enter/Space enters, world edge warp → `/hollow (secret route /avery, no label)`.
 
 ## Next loop tasks (one map per route, each map contains that page's contents)
 
@@ -27,7 +27,7 @@
 ### 2) `/ml` — Theatre map
 - Theatre interior: stage = prediction (`SPY/NVDA MLP`), wings = yield curve, P/E, DXY displays. Backstage = feature list. Keep `ml/validate.json` fetches; render numbers on theatre boards. Add HOOK for future training viz.
 
-### 3) `/avery` — Doomsday archipelago variant (now themed)
+### 3) `/hollow (secret route /avery, no label)` — Doomsday archipelago variant (now themed)
 - Map the Schrödinger lab as a map too (nuclear archipelago), but keep physics accuracy. Map the atom/Geiger/hammer/vial/cat as walkable stations; measurement is an interaction. Same sepia base but allow burn tints remapped into sepia-blue flash. Must remain full-bleed.
 
 ### 4) `/code`, `/links`, `/contact`, `/more` — Mill/Post/Shed/Store maps
@@ -43,4 +43,4 @@
 
 ## Verify
 - No `style="..."` string bugs, no missing `BR`/`BrowserRouter` imports.
-- `grep -c "/kenton\|/avery\|/ml" docs/assets/*.js` >0 and `docs/index.html` has `id="root"`.
+- `grep -c "/kenton\|/hollow (secret route /avery, no label)\|/ml" docs/assets/*.js` >0 and `docs/index.html` has `id="root"`.

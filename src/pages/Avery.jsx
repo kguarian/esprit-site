@@ -303,7 +303,7 @@ export function Avery() {
         {/* header */}
         {phase!=='dead' && <div style={{ padding: '18px 18px 0', display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', flexWrap: 'wrap', gap: 12 }}>
           <div>
-            <div className="mono" style={{ fontSize: 10, letterSpacing: 3, opacity: 0.7, color: '#22d3ee' }}>AVERY LAB // SCHRÖDINGER PROTOCOL</div>
+            <div className="mono" style={{ fontSize: 10, letterSpacing: 3, opacity: 0.7, color: '#22d3ee' }}>LAB // SCHRÖDINGER PROTOCOL</div>
             <div className="avery-title" style={{ background: 'linear-gradient(90deg,#f472b6,#22d3ee,#a78bfa)', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent' }}>The Cat Experiment</div>
             <div style={{ fontSize: 12, opacity: 0.75 }}>Physically accurate · sealed box · single ²¹⁰Po atom · Geiger + hammer + HCN vial · unitary evolution until measurement</div>
           </div>
@@ -482,7 +482,7 @@ export function Avery() {
             </div>
 
             <div className="glass" style={{ borderRadius: 16, padding: 12, display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-              <div className="mono" style={{ fontSize: 10, opacity: 0.6 }}>Avery’s lab • punk-rock liquid glass • neon cyber-physics</div>
+              <div className="mono" style={{ fontSize: 10, opacity: 0.6 }}>Lab • punk-rock liquid glass • neon cyber-physics</div>
               <div style={{ width: 10, height: 10, borderRadius: '50%', background: phase === 'superposed' ? '#f472b6' : phase === 'alive' ? '#10b981' : phase === 'dead' ? '#ef4444' : '#334155', boxShadow: `0 0 10px ${phase === 'superposed' ? '#ec4899' : phase === 'alive' ? '#10b981' : phase === 'dead' ? '#ef4444' : 'transparent'}`, animation: phase !== 'ready' ? 'glowPulse 1s infinite' : '' }} />
             </div>
           </div>
