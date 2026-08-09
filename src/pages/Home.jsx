@@ -2,13 +2,13 @@ import React from 'react'
 import { useNavigate } from 'react-router-dom'
 
 const PALETTE = {
-  ink: '#101112',
-  land: '#C9BFA6',
-  landLight: '#E5DCC6',
-  paper: '#F5EED8',
-  sea: '#AAB5B7',
-  seaDark: '#819195',
-  signal: '#6E849B',
+  ink: '#0A0A0B',
+  land: '#9A8E7A',
+  landLight: '#C2B8A3',
+  paper: '#E8E0C8',
+  sea: '#8E9EAC',
+  seaDark: '#6B6254',
+  signal: '#7E8FA3',
 }
 
 const WORLD = { width: 2000, height: 1400 }
@@ -334,7 +334,7 @@ export function Home() {
       tabIndex={0}
       aria-label="Interactive map of Kenton Guarian's website"
       onPointerDown={event => event.currentTarget.focus()}
-      style={{ minHeight: '100dvh', height: '100dvh', position: 'relative', overflow: 'hidden', background: PALETTE.sea, color: PALETTE.ink, outline: 'none' }}
+      style={{ minHeight: '100dvh', height: '100dvh', position: 'relative', overflow: 'hidden', background: PALETTE.sea, color: PALETTE.ink, outline: 'none', filter: 'sepia(0.38) saturate(0.82)' }}
     >
       <style>{`
         @keyframes mapPulse { 0%,49% { fill:${PALETTE.signal} } 50%,100% { fill:${PALETTE.paper} } }

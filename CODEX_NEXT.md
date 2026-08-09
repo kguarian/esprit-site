@@ -38,6 +38,15 @@
 - Codex: extend an existing content region or add another clearly labeled site destination. Active flash is provided by `.map-location-active`; on click/Enter, navigate or open a modal.
 - Subpages may use `data-hook="<page>-*"`; document new content hooks in this file.
 
+### Implemented subpage hooks
+- `/kenton`: `kenton-home`, `kenton-profile`, `kenton-experience`, `kenton-skills`, `kenton-projects`, `kenton-signals`, `kenton-ucsd`.
+- `/ml`: `ml-home`, `ml-prediction`, `ml-yield-curve`, `ml-valuation`, `ml-dxy`, `ml-features`, `ml-training-hook`, and nested `ml-training-visualization`.
+- `/hollow` (`/avery`): `hollow-home`, `hollow-atom`, `hollow-geiger`, `hollow-relay`, `hollow-vial`, `hollow-cat`.
+- `/code`: `code-home`, `code-research-tools`, `code-education`, `code-signals`, `code-portfolio`, `code-music`.
+- `/links`: `links-home`, `links-publication`, `links-voytek`, `links-github`, `links-linkedin`, `links-resume`.
+- `/contact`: `contact-home`, `contact-email`, `contact-linkedin`, `contact-github`, `contact-research`, `contact-profile`.
+- `/more`: `more-home`, `more-notes`, `more-experiments`, `more-models`, `more-code`, `more-contact`.
+
 ## Build/deploy
 - `python3 build.py` (must be ✓ BUILD OK) → commit `src/main.jsx` + `docs/` + this file → `git push origin main` (GH Pages `main/docs`).
 
