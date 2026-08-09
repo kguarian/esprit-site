@@ -13,30 +13,30 @@
 - Homepage is called out from every other page: each subpage map has a **HOME portal** (e.g. `HOME` / `← ARCHIPELAGO`) that returns to `/` — visually distinct (e.g. compass/border).
 - Keep `Layout` header/nav for accessibility but maps are the primary navigation.
 
-## Current homepage state (`src/main.jsx:Home`)
-- World `2400×1600`, camera lerps 0.08 toward player, `viewBox 1000×650` tracking `viewX/viewY`.
-- 6 portals: CABIN→/kenton, STORE→/links, THEATRE→/ml, MILL→/code, POST→/contact, SHED→/more. 4 hook lots `HOOK_NORTH/EAST/SOUTH/WEST` dashed `8 6` for Codex.
-- Player WASD/arrows 9px/tick rAF + click-to-walk via viewport mapping, proximity ±22px activates, Enter/Space enters, world edge warp → `/hollow (secret route /avery, no label)`.
+## Current homepage state (`src/pages/Home.jsx`)
+- World `2000×1400`, camera follows the player through a `1000×650` viewport.
+- Six content regions map directly to the site: KENTON→/kenton, RESEARCH→/links, ML MODELS→/ml, CODE→/code, CONNECT→/contact, MORE→/more. They are abstract map markers, not buildings or empty lots.
+- WASD and Arrow keys share one normalized movement map (8.5px/tick), click-to-walk uses viewport mapping, proximity activates a region, and Enter/Space enters it. The world edge still reaches `/avery` without naming it in the UI.
 
 ## Next loop tasks (one map per route, each map contains that page's contents)
 
-### 1) `/kenton` — Cabin interior map
-- Map the resume content spatially: sections become rooms/furniture (EXPERIENCE desk, TECHNICAL SKILLS shelf, SELECTED PROJECTS crate, UCSD diploma wall). Keep current `Kenton()` JSX content but render as interactables on the map — approaching shows excerpt, Enter opens detail popover / scrolls to anchor.
-- Palette same; add warm wood tints still within sepia range.
+### 1) `/kenton` — Profile map
+- Map the resume content spatially with abstract, content-led regions for EXPERIENCE, TECHNICAL SKILLS, SELECTED PROJECTS, and UCSD. Keep current `Kenton()` JSX content but render it as interactables on the map — approaching shows an excerpt and Enter opens a detail popover or anchor.
+- Keep the sepia-indigo palette without domestic or rustic building imagery.
 
-### 2) `/ml` — Theatre map
-- Theatre interior: stage = prediction (`SPY/NVDA MLP`), wings = yield curve, P/E, DXY displays. Backstage = feature list. Keep `ml/validate.json` fetches; render numbers on theatre boards. Add HOOK for future training viz.
+### 2) `/ml` — Model map
+- Use abstract analytical regions: prediction (`SPY/NVDA MLP`), yield curve, P/E, DXY, and feature set. Keep `ml/validate.json` fetches and render numbers on the map. Add one hook for future training visualization.
 
 ### 3) `/hollow (secret route /avery, no label)` — Doomsday archipelago variant (now themed)
 - Map the Schrödinger lab as a map too (nuclear archipelago), but keep physics accuracy. Map the atom/Geiger/hammer/vial/cat as walkable stations; measurement is an interaction. Same sepia base but allow burn tints remapped into sepia-blue flash. Must remain full-bleed.
 
-### 4) `/code`, `/links`, `/contact`, `/more` — Mill/Post/Shed/Store maps
-- Each gets a small bespoke map that lists its current scaffold items as labeled interactables. Reuse `Layout` content; place as chests/signs. Add one HOOK per map.
+### 4) `/code`, `/links`, `/contact`, `/more` — Content maps
+- Each gets a small bespoke map that lists its current scaffold items as labeled interactables. Reuse `Layout` content; use abstract, content-specific markers rather than themed structures. Add one hook per map.
 
 ## Codex hook contract
-- Hook lots have `id="hook_*"`, `data-hook="north|east|south|west"` on homepage, and `data-hook="<page>-*"` on subpages.
-- Codex: inject `<g id="hook_*">` with `ink` outlines; active flash is automatic via `.flash` class when `active===id`. On click/Enter, navigate or open modal.
-- Document new hooks in this file.
+- Homepage regions use `id="location_<name>"` and `data-hook="map-<name>"`; there are no generic empty lots or themed structures.
+- Codex: extend an existing content region or add another clearly labeled site destination. Active flash is provided by `.map-location-active`; on click/Enter, navigate or open a modal.
+- Subpages may use `data-hook="<page>-*"`; document new content hooks in this file.
 
 ## Build/deploy
 - `python3 build.py` (must be ✓ BUILD OK) → commit `src/main.jsx` + `docs/` + this file → `git push origin main` (GH Pages `main/docs`).
