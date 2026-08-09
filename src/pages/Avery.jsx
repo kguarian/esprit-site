@@ -1,7 +1,20 @@
 import React from 'react'
 import { DetailSection, InteractiveMap } from '../components/InteractiveMap.jsx'
 
-function PhysicsDetail({ phase, stats }) {
+const ISOTOPE = {
+  name: 'Radon-220',
+  symbol: '²²⁰Rn',
+  commonName: 'thoron',
+  halfLifeSeconds: 55.6,
+}
+
+const EXPOSURE_SECONDS = [15, 45, 90, 180]
+
+function decayProbability(seconds) {
+  return 1 - 2 ** (-seconds / ISOTOPE.halfLifeSeconds)
+}
+
+function PhysicsDetail({ phase, stats, exposureSeconds, probability }) {
   const vector = phase === 'alive'
     ? '|not decayed⟩ |alive⟩'
     : phase === 'dead'
@@ -10,7 +23,10 @@ function PhysicsDetail({ phase, stats }) {
   return <>
     <DetailSection heading="STATE VECTOR">
       <p className="hollow-vector">|ψ⟩ = {vector}</p>
-      <p>{phase === 'sealed' ? 'The box is sealed. Before measurement, the atom, apparatus, and cat are modeled as one entangled system.' : phase === 'measuring' ? 'Measurement is coupling the apparatus to an external record; the simulator is resolving one outcome.' : phase === 'alive' ? 'One observed run: no decay record, cat alive.' : phase === 'dead' ? 'One observed run: decay record, relay triggered, cat dead.' : 'Prepare a deliberately tuned 50/50 simulation interval, then measure once.'}</p>
+      <p>{phase === 'sealed' ? `The box is sealed with ${ISOTOPE.symbol} ${ISOTOPE.name}. The longer it remains sealed, the more likely one nucleus has decayed.` : phase === 'measuring' ? 'Measurement is coupling the detector to an external record; the simulator is resolving one outcome.' : phase === 'alive' ? 'One observed run: no decay record, cat alive.' : phase === 'dead' ? 'One observed run: decay record, relay triggered, cat dead.' : `Choose an exposure interval for ${ISOTOPE.name}, then seal the box and measure once.`}</p>
+    </DetailSection>
+    <DetailSection heading="ISOTOPE">
+      <p>{ISOTOPE.symbol} {ISOTOPE.name} ({ISOTOPE.commonName}) · half-life {ISOTOPE.halfLifeSeconds}s · selected exposure {exposureSeconds}s · decay chance {(probability * 100).toFixed(1)}%</p>
     </DetailSection>
     <DetailSection heading="RUN COUNTER"><p>alive {stats.alive} · dead {stats.dead} · total {stats.alive + stats.dead}</p></DetailSection>
   </>
@@ -19,7 +35,9 @@ function PhysicsDetail({ phase, stats }) {
 export function Avery() {
   const [phase, setPhase] = React.useState('ready')
   const [stats, setStats] = React.useState({ alive: 0, dead: 0 })
+  const [exposureSeconds, setExposureSeconds] = React.useState(45)
   const timeoutRef = React.useRef(null)
+  const probability = decayProbability(exposureSeconds)
 
   React.useEffect(() => () => window.clearTimeout(timeoutRef.current), [])
 
@@ -32,18 +50,18 @@ export function Avery() {
     if (phase !== 'sealed') return
     setPhase('measuring')
     timeoutRef.current = window.setTimeout(() => {
-      const result = Math.random() < .5 ? 'alive' : 'dead'
+      const result = Math.random() < probability ? 'dead' : 'alive'
       setPhase(result)
       setStats(current => ({ ...current, [result]: current[result] + 1 }))
     }, 560)
-  }, [phase])
+  }, [phase, probability])
 
   const reset = React.useCallback(() => {
     window.clearTimeout(timeoutRef.current)
     setPhase('ready')
   }, [])
 
-  const common = React.useMemo(() => ({ phase, stats }), [phase, stats])
+  const common = React.useMemo(() => ({ phase, stats, exposureSeconds, probability }), [exposureSeconds, phase, probability, stats])
   const locations = React.useMemo(() => [
     {
       id: 'home', hook: 'hollow-home', home: true, to: '/', glyph: 'home', x: 342, y: 445, w: 180, h: 150,
@@ -51,9 +69,9 @@ export function Avery() {
     },
     {
       id: 'atom', hook: 'hollow-atom', glyph: 'atom', x: 835, y: 500, w: 330, h: 182,
-      label: 'SOURCE', sub: phase === 'ready' ? 'UNPREPARED' : phase === 'sealed' ? '50 / 50 INTERVAL' : phase === 'dead' ? 'DECAY RECORDED' : 'NO DECAY RECORD', lore: 'An unstable-source simulator represents the quantum event that begins the chain.',
-      detail: <><DetailSection heading="SOURCE CHAMBER"><p>This is a pedagogical 50/50 simulation interval, not a claim that a real isotope has a one-second half-life. The quantum state evolves until a measurement produces a recorded outcome.</p></DetailSection><PhysicsDetail {...common} /></>,
-      action: phase === 'ready' ? arm : undefined, actionLabel: 'SEAL BOX / PREPARE 50–50 RUN →',
+      label: 'SOURCE', sub: phase === 'ready' ? `${exposureSeconds}S SELECTED` : phase === 'sealed' ? `${(probability * 100).toFixed(1)}% DECAY CHANCE` : phase === 'dead' ? 'DECAY RECORDED' : 'NO DECAY RECORD', lore: `${ISOTOPE.symbol} ${ISOTOPE.name} source: actual isotope, simulated with exponential decay probability.`,
+      detail: <><DetailSection heading="SOURCE CHAMBER"><p>Select an exposure interval, seal the box, then measure. Probability uses P(decay)=1−2^(-t/half-life), with {ISOTOPE.name} half-life {ISOTOPE.halfLifeSeconds}s.</p>{phase === 'ready' && <div className="hollow-choices">{EXPOSURE_SECONDS.map(seconds => <button key={seconds} type="button" className={seconds === exposureSeconds ? 'selected' : ''} onClick={() => setExposureSeconds(seconds)}>{seconds}s · {(decayProbability(seconds) * 100).toFixed(0)}%</button>)}</div>}</DetailSection><PhysicsDetail {...common} /></>,
+      action: phase === 'ready' ? arm : undefined, actionLabel: `SEAL BOX WITH ${ISOTOPE.symbol} SOURCE →`,
     },
     {
       id: 'geiger', hook: 'hollow-geiger', glyph: 'geiger', x: 1515, y: 500, w: 322, h: 178,
@@ -73,23 +91,23 @@ export function Avery() {
     {
       id: 'cat', hook: 'hollow-cat', glyph: 'cat', x: 864, y: 1120, w: 346, h: 178,
       label: 'CAT', sub: phase === 'alive' ? 'ALIVE' : phase === 'dead' ? 'DEAD' : phase === 'measuring' ? 'MEASURING…' : 'SEALED BOX', lore: 'The cat is entangled with the decay chain in the simplified thought experiment.',
-      detail: <><DetailSection heading="MEASUREMENT STATION"><p>In this simulator, opening the box is the measurement event. Every prepared run has equal simulated probability of decay or no decay.</p></DetailSection><PhysicsDetail {...common} /></>,
+      detail: <><DetailSection heading="MEASUREMENT STATION"><p>Opening the box samples the selected exposure interval. Current decay chance: {(probability * 100).toFixed(1)}%. No real apparatus is implied; this is a safe conceptual simulator.</p></DetailSection><PhysicsDetail {...common} /></>,
       action: phase === 'sealed' ? measure : phase === 'alive' || phase === 'dead' ? reset : undefined,
       actionLabel: phase === 'sealed' ? 'MEASURE / OPEN THE BOX →' : phase === 'alive' || phase === 'dead' ? 'RESET / NEW RUN →' : undefined,
     },
-  ], [arm, common, measure, phase, reset])
+  ], [arm, common, exposureSeconds, measure, phase, probability, reset])
 
   return <>
     <style>{`
-      .hollow-vector{font:800 10px/1.55 "JetBrains Mono",ui-monospace,monospace!important;letter-spacing:.02em}.hollow-state{position:absolute;z-index:4;left:50%;top:17%;transform:translateX(-50%);padding:8px 12px;border:2px solid #0A0A0B;background:rgba(232,224,200,.9);font:800 10px/1 "JetBrains Mono",ui-monospace,monospace;letter-spacing:.13em;white-space:nowrap}.hollow-ash{position:absolute;inset:0;z-index:3;pointer-events:none;background:radial-gradient(ellipse at 65% 72%,rgba(122,76,49,.52),transparent 33%),linear-gradient(180deg,rgba(59,45,36,.1),rgba(24,17,14,.32));mix-blend-mode:multiply}.hollow-ash:after{content:"";position:absolute;inset:0;background-image:radial-gradient(#0A0A0B 1px,transparent 1.3px);background-size:17px 17px;opacity:.27}@media(max-width:720px){.hollow-state{top:16%;font-size:8px}}
+      .hollow-vector{font:800 10px/1.55 "JetBrains Mono",ui-monospace,monospace!important;letter-spacing:.02em}.hollow-state{position:absolute;z-index:4;right:clamp(14px,2.8vw,44px);top:120px;padding:8px 12px;border:2px solid #0A0A0B;background:rgba(232,224,200,.9);font:800 10px/1 "JetBrains Mono",ui-monospace,monospace;letter-spacing:.13em;white-space:nowrap}.hollow-choices{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:6px;margin-top:9px}.hollow-choices button{border:2px solid #0A0A0B;background:#E8E0C8;color:#0A0A0B;padding:7px 6px;border-radius:7px;font:800 9px/1 "JetBrains Mono",ui-monospace,monospace;cursor:pointer}.hollow-choices button.selected{background:#7E8FA3}.hollow-ash{position:absolute;inset:0;z-index:3;pointer-events:none;background:radial-gradient(ellipse at 65% 72%,rgba(122,76,49,.52),transparent 33%),linear-gradient(180deg,rgba(59,45,36,.1),rgba(24,17,14,.32));mix-blend-mode:multiply}.hollow-ash:after{content:"";position:absolute;inset:0;background-image:radial-gradient(#0A0A0B 1px,transparent 1.3px);background-size:17px 17px;opacity:.27}@media(max-width:720px){.hollow-state{right:12px;top:70px;font-size:8px}}
     `}</style>
     <InteractiveMap
       id="hollow"
       eyebrow="THE HOLLOW / SCHRÖDINGER LAB"
       title="The Closed Box"
-      subtitle="A map of the thought experiment: source, detector, relay, vial, and cat. Walk to a station, prepare a simulated 50/50 run, then make one measurement."
+      subtitle={`A playable thought-experiment map using ${ISOTOPE.symbol} ${ISOTOPE.name}. Choose exposure time, seal the box, then measure the decay chain once.`}
       locations={locations}
-      footer={phase === 'ready' ? 'SOURCE UNPREPARED · SELECT SOURCE TO SEAL THE BOX' : phase === 'sealed' ? 'BOX SEALED · SELECT CAT TO MEASURE' : phase === 'measuring' ? 'MEASUREMENT IN PROGRESS…' : `OBSERVED: ${phase.toUpperCase()} · SELECT CAT TO RESET`}
+      footer={phase === 'ready' ? `SOURCE READY · ${exposureSeconds}S EXPOSURE · ${(probability * 100).toFixed(1)}% DECAY CHANCE` : phase === 'sealed' ? 'BOX SEALED · SELECT CAT TO MEASURE' : phase === 'measuring' ? 'MEASUREMENT IN PROGRESS…' : `OBSERVED: ${phase.toUpperCase()} · SELECT CAT TO RESET`}
     >
       {phase === 'dead' && <div className="hollow-ash" aria-hidden="true" />}
       <div className="hollow-state" aria-live="polite">STATE: {phase.toUpperCase()} · RUNS {stats.alive + stats.dead}</div>

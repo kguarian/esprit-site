@@ -69,6 +69,20 @@ function Marker({ item, active, onActivate, onFocus }) {
   )
 }
 
+function FieldAvatar({ avatar }) {
+  return <>
+    <ellipse cx="0" cy="31" rx="19" ry="7" fill="rgba(10,10,11,.22)" stroke="none" />
+    <path d="M-9 4-13 30M9 4 13 30M-10-5-24 8M10-5 24 8" fill="none" strokeWidth="7" />
+    <path d="M-16-10Q0-23 16-10L12 12Q0 18-12 12Z" fill={avatar.jacket} strokeWidth="4" />
+    <path d="M-11-5H11" style={{ stroke: avatar.accent }} strokeWidth="6" />
+    <circle cx="0" cy="-31" r="15" fill={PALETTE.paper} strokeWidth="4" />
+    <path d="M-14-36Q0-50 14-36L12-28Q0-34-12-28Z" fill={avatar.hair} strokeWidth="3" />
+    {avatar.accessory === 'cap' && <><path d="M-18-37Q0-55 18-37L14-29H-14Z" fill={avatar.accent} strokeWidth="3" /><path d="M10-30h18" strokeWidth="4" /></>}
+    {avatar.accessory === 'visor' && <path d="M-14-34Q0-40 14-34L11-25Q0-21-11-25Z" fill={avatar.accent} strokeWidth="3" />}
+    {avatar.accessory === 'headphones' && <path d="M-20-31Q-18-55 0-56Q18-55 20-31" fill="none" style={{ stroke: avatar.accent }} strokeWidth="5" />}
+  </>
+}
+
 export function DetailSection({ heading, children }) {
   return <section className="map-detail-section"><h3>{heading}</h3>{children}</section>
 }
@@ -77,14 +91,31 @@ export function InteractiveMap({ id, eyebrow, title, subtitle, locations, footer
   const navigate = useNavigate()
   const wrapRef = React.useRef(null)
   const [player, setPlayer] = React.useState({ x: 1200, y: 810 })
+  const [avatar] = React.useState(() => {
+    const fallback = { callSign: 'VISITOR', jacket: PALETTE.blueSepia, accent: '#D85C8A', hair: PALETTE.ink, accessory: 'cap' }
+    try {
+      const saved = JSON.parse(window.localStorage.getItem('esprit-avatar') || '{}')
+      return { ...fallback, ...saved, callSign: !saved.callSign || saved.callSign === 'ROVER' ? 'VISITOR' : saved.callSign }
+    } catch { return fallback }
+  })
+  const playerRef = React.useRef(player)
+  const movementTargetRef = React.useRef(null)
+  const touchVectorRef = React.useRef(null)
+  const touchGestureRef = React.useRef(null)
   const [activeId, setActiveId] = React.useState(() => locations.find(item => !item.home)?.id ?? locations[0]?.id)
   const active = locations.find(item => item.id === activeId) ?? locations[0]
+  const canInteract = active && Math.hypot(player.x - active.x, player.y - active.y) <= 215
   const activeRef = React.useRef(active)
   const activateRef = React.useRef(null)
 
   const focusItem = React.useCallback(item => setActiveId(item.id), [])
   const activate = React.useCallback(item => {
     setActiveId(item.id)
+    const distance = Math.hypot(playerRef.current.x - item.x, playerRef.current.y - item.y)
+    if (distance > 205) {
+      movementTargetRef.current = { x: item.x, y: item.y + item.h / 2 + 55 }
+      return
+    }
     if (item.to) navigate(item.to)
     if (item.onEnter) item.onEnter()
   }, [navigate])
@@ -96,12 +127,14 @@ export function InteractiveMap({ id, eyebrow, title, subtitle, locations, footer
     const previousBodyOverflow = document.body.style.overflow
     const previousOverscroll = document.documentElement.style.overscrollBehavior
     const preventScroll = event => event.preventDefault()
+    const pressedKeys = new Set()
+    let frameId
+    let previousTime = performance.now()
     const onKeyDown = event => {
       const key = event.key.toLowerCase()
       if (DIRECTIONS[key]) {
         event.preventDefault()
-        const direction = DIRECTIONS[key]
-        setPlayer(current => ({ x: clamp(current.x + direction.x * 72), y: clamp(current.y + direction.y * 72) }))
+        pressedKeys.add(key)
         return
       }
       if ((event.key === 'Enter' || event.key === ' ') && document.activeElement === wrapRef.current) {
@@ -109,16 +142,52 @@ export function InteractiveMap({ id, eyebrow, title, subtitle, locations, footer
         if (activeRef.current) activateRef.current(activeRef.current)
       }
     }
+    const onKeyUp = event => pressedKeys.delete(event.key.toLowerCase())
+    const clearKeys = () => pressedKeys.clear()
+    const tick = time => {
+      const delta = Math.min(2, (time - previousTime) / 16.67)
+      previousTime = time
+      let horizontal = touchVectorRef.current?.x ?? 0
+      let vertical = touchVectorRef.current?.y ?? 0
+      for (const key of pressedKeys) {
+        horizontal += DIRECTIONS[key].x
+        vertical += DIRECTIONS[key].y
+      }
+      if (horizontal || vertical) movementTargetRef.current = null
+      if (!horizontal && !vertical && movementTargetRef.current) {
+        const dx = movementTargetRef.current.x - playerRef.current.x
+        const dy = movementTargetRef.current.y - playerRef.current.y
+        const distance = Math.hypot(dx, dy)
+        if (distance < 15) movementTargetRef.current = null
+        else { horizontal = dx / distance; vertical = dy / distance }
+      }
+      if (horizontal || vertical) {
+        const length = Math.hypot(horizontal, vertical) || 1
+        const next = {
+          x: clamp(playerRef.current.x + horizontal / length * 14 * delta),
+          y: clamp(playerRef.current.y + vertical / length * 14 * delta),
+        }
+        playerRef.current = next
+        setPlayer(next)
+      }
+      frameId = window.requestAnimationFrame(tick)
+    }
     document.body.style.overflow = 'hidden'
     document.documentElement.style.overscrollBehavior = 'none'
     window.addEventListener('keydown', onKeyDown, { capture: true, passive: false })
+    window.addEventListener('keyup', onKeyUp, { capture: true })
+    window.addEventListener('blur', clearKeys)
     window.addEventListener('wheel', preventScroll, { passive: false })
     window.addEventListener('touchmove', preventScroll, { passive: false })
     window.requestAnimationFrame(() => wrapRef.current?.focus())
+    frameId = window.requestAnimationFrame(tick)
     return () => {
+      window.cancelAnimationFrame(frameId)
       document.body.style.overflow = previousBodyOverflow
       document.documentElement.style.overscrollBehavior = previousOverscroll
       window.removeEventListener('keydown', onKeyDown, true)
+      window.removeEventListener('keyup', onKeyUp, true)
+      window.removeEventListener('blur', clearKeys)
       window.removeEventListener('wheel', preventScroll)
       window.removeEventListener('touchmove', preventScroll)
     }
@@ -132,12 +201,44 @@ export function InteractiveMap({ id, eyebrow, title, subtitle, locations, footer
   }, [locations, player])
 
   const moveOnMap = event => {
+    if (touchGestureRef.current?.moved) {
+      touchGestureRef.current = null
+      return
+    }
+    touchGestureRef.current = null
     const box = event.currentTarget.getBoundingClientRect()
-    setPlayer({
+    movementTargetRef.current = {
       x: clamp((event.clientX - box.left) / box.width * WORLD.w),
       y: clamp((event.clientY - box.top) / box.height * WORLD.h),
-    })
+    }
     wrapRef.current?.focus()
+  }
+
+  const beginTouch = event => {
+    event.preventDefault()
+    event.currentTarget.setPointerCapture?.(event.pointerId)
+    touchGestureRef.current = { id: event.pointerId, x: event.clientX, y: event.clientY, moved: false }
+    touchVectorRef.current = null
+  }
+
+  const moveTouch = event => {
+    const gesture = touchGestureRef.current
+    if (!gesture || gesture.id !== event.pointerId) return
+    event.preventDefault()
+    const dx = event.clientX - gesture.x
+    const dy = event.clientY - gesture.y
+    const distance = Math.hypot(dx, dy)
+    if (distance < 18) return
+    gesture.moved = true
+    movementTargetRef.current = null
+    touchVectorRef.current = { x: dx / distance, y: dy / distance }
+  }
+
+  const endTouch = event => {
+    if (touchGestureRef.current?.id !== event.pointerId) return
+    event.preventDefault()
+    event.currentTarget.releasePointerCapture?.(event.pointerId)
+    touchVectorRef.current = null
   }
 
   return (
@@ -147,14 +248,16 @@ export function InteractiveMap({ id, eyebrow, title, subtitle, locations, footer
         @keyframes archipelagoBob{0%,100%{transform:translateY(0)}50%{transform:translateY(-8px)}}
         .archipelago-root{isolation:isolate;position:relative;min-height:100dvh;height:100dvh;overflow:hidden;background:${PALETTE.sea};color:${PALETTE.ink};font-family:Inter,ui-sans-serif,system-ui,sans-serif;outline:none;filter:sepia(.38) saturate(.82)}
         .archipelago-root:before{content:"";position:absolute;inset:0;z-index:2;pointer-events:none;background:linear-gradient(180deg,rgba(232,224,200,.22),transparent 21%,transparent 72%,rgba(10,10,11,.13));mix-blend-mode:soft-light}
-        .archipelago-map{width:100%;height:100%;display:block;cursor:crosshair}
+        .archipelago-map{width:100%;height:100%;display:block;cursor:crosshair;touch-action:none}
         .archipelago-plate{fill:${PALETTE.paper};stroke:${PALETTE.ink};stroke-width:5;stroke-linejoin:round}.archipelago-marker{cursor:pointer;color:${PALETTE.ink};outline:none}.archipelago-marker:hover .archipelago-plate,.archipelago-marker:focus .archipelago-plate{fill:${PALETTE.blueSepia}}.archipelago-marker.map-location-active .archipelago-plate{animation:archipelagoFlash .28s steps(1) infinite}.archipelago-glyph{color:${PALETTE.ink}}.archipelago-label,.archipelago-sub,.archipelago-enter{font-family:"JetBrains Mono",ui-monospace,monospace;fill:${PALETTE.ink};font-weight:800}.archipelago-label{font-size:24px;letter-spacing:3px}.archipelago-sub{font-size:14px;letter-spacing:1.6px}.archipelago-enter{font-size:13px;letter-spacing:2px}.archipelago-home-ring{fill:${PALETTE.paper};stroke:${PALETTE.ink};stroke-width:6;stroke-dasharray:11 8}.archipelago-marker:hover .archipelago-home-ring,.archipelago-marker:focus .archipelago-home-ring{fill:${PALETTE.blueSepia}}.archipelago-marker.map-location-active .archipelago-home-ring{animation:archipelagoFlash .28s steps(1) infinite}.archipelago-shadow{filter:blur(2px)}
-        .archipelago-player{animation:archipelagoBob .8s ease-in-out infinite}.archipelago-player *{stroke:${PALETTE.ink};stroke-linejoin:round;stroke-linecap:round}.archipelago-crest{position:absolute;z-index:4;top:clamp(12px,2.4vw,30px);left:clamp(12px,2.8vw,44px);max-width:min(585px,calc(100vw - 24px));pointer-events:none}.archipelago-eyebrow{font:800 clamp(8px,1vw,13px)/1 "JetBrains Mono",ui-monospace,monospace;letter-spacing:.24em}.archipelago-title{margin:7px 0 0;font-size:clamp(29px,5.4vw,68px);line-height:.94;letter-spacing:-.075em}.archipelago-subtitle{max-width:560px;margin:10px 0 0;font-size:clamp(11px,1.35vw,15px);line-height:1.45}.archipelago-card{position:absolute;z-index:5;right:clamp(12px,2.8vw,44px);bottom:clamp(12px,2.8vw,38px);width:min(390px,calc(100vw - 24px));max-height:min(52dvh,500px);overflow:auto;border:3px solid ${PALETTE.ink};border-radius:16px;background:rgba(232,224,200,.95);box-shadow:8px 8px 0 rgba(10,10,11,.22);padding:16px 17px 15px}.archipelago-card-header{display:flex;gap:12px;align-items:baseline;border-bottom:2px solid rgba(10,10,11,.22);padding-bottom:10px}.archipelago-card h2{margin:0;font:800 16px/1 "JetBrains Mono",ui-monospace,monospace;letter-spacing:.1em}.archipelago-card-kicker{font:800 9px/1 "JetBrains Mono",ui-monospace,monospace;letter-spacing:.16em;opacity:.72}.archipelago-card p{font-size:13px;line-height:1.5;margin:10px 0 0}.map-detail-section{margin:12px 0 0}.map-detail-section h3{margin:0 0 6px;font:800 10px/1.2 "JetBrains Mono",ui-monospace,monospace;letter-spacing:.14em}.map-detail-section ul{margin:0;padding-left:18px;font-size:12px;line-height:1.52}.map-detail-section a,.map-detail-section button{color:${PALETTE.ink};font-weight:800}.archipelago-action{display:inline-flex;align-items:center;justify-content:center;margin-top:13px;padding:9px 11px;border:2px solid ${PALETTE.ink};border-radius:7px;background:${PALETTE.blueSepia};color:${PALETTE.ink};font:800 10px/1 "JetBrains Mono",ui-monospace,monospace;letter-spacing:.11em;text-decoration:none;cursor:pointer}.archipelago-action:hover{background:${PALETTE.ink};color:${PALETTE.paper}}.archipelago-hud{position:absolute;z-index:4;left:clamp(12px,2.8vw,44px);bottom:clamp(12px,2.8vw,38px);max-width:min(525px,calc(100vw - 24px));font:800 10px/1.35 "JetBrains Mono",ui-monospace,monospace;letter-spacing:.06em}.archipelago-hud span{display:inline-block;padding:8px 10px;border:2px solid ${PALETTE.ink};background:rgba(232,224,200,.94);border-radius:8px}.archipelago-compass{position:absolute;right:clamp(14px,2.8vw,44px);top:clamp(14px,2.8vw,38px);z-index:4;width:70px;height:70px;border:2px solid ${PALETTE.ink};border-radius:50%;display:grid;place-items:center;background:rgba(232,224,200,.78);font:800 11px/1 "JetBrains Mono",ui-monospace,monospace}.archipelago-compass:before{content:"";position:absolute;width:1px;height:48px;background:${PALETTE.ink}}.archipelago-compass:after{content:"";position:absolute;width:48px;height:1px;background:${PALETTE.ink}}.archipelago-compass b{z-index:1;background:${PALETTE.paper};padding:3px}.archipelago-overlay{position:absolute;z-index:3;inset:0;pointer-events:none;background-image:radial-gradient(rgba(10,10,11,.32) .8px,transparent .8px);background-size:13px 13px;mix-blend-mode:multiply;opacity:.17}
-        @media(max-width:720px){.archipelago-crest{top:13px}.archipelago-title{font-size:31px}.archipelago-subtitle{max-width:270px;font-size:11px}.archipelago-compass{width:47px;height:47px;font-size:8px}.archipelago-compass:before{height:31px}.archipelago-compass:after{width:31px}.archipelago-card{left:10px;right:10px;bottom:10px;width:auto;max-height:42dvh;padding:12px}.archipelago-hud{display:none}.archipelago-label{font-size:22px}.archipelago-sub{font-size:13px}.archipelago-map{min-width:620px;transform:translateX(calc((100vw - 620px)/2));width:620px}.archipelago-root{background:${PALETTE.sea}}}
+        .archipelago-player{animation:archipelagoBob .8s ease-in-out infinite}.archipelago-player *{stroke:${PALETTE.ink};stroke-linejoin:round;stroke-linecap:round}.archipelago-player text,.archipelago-player ellipse{stroke:none}.archipelago-crest{position:absolute;z-index:4;top:clamp(12px,2.4vw,30px);left:clamp(12px,2.8vw,44px);max-width:min(585px,calc(100vw - 24px));pointer-events:none}.archipelago-eyebrow{font:800 clamp(8px,1vw,13px)/1 "JetBrains Mono",ui-monospace,monospace;letter-spacing:.24em}.archipelago-title{margin:7px 0 0;font-size:clamp(29px,5.4vw,68px);line-height:.94;letter-spacing:-.075em}.archipelago-subtitle{max-width:560px;margin:10px 0 0;font-size:clamp(11px,1.35vw,15px);line-height:1.45}.archipelago-card{position:absolute;z-index:5;right:clamp(12px,2.8vw,44px);bottom:clamp(12px,2.8vw,38px);width:min(390px,calc(100vw - 24px));max-height:min(52dvh,500px);overflow:auto;border:3px solid ${PALETTE.ink};border-radius:16px;background:rgba(232,224,200,.95);box-shadow:8px 8px 0 rgba(10,10,11,.22);padding:16px 17px 15px}.archipelago-card-header{display:flex;gap:12px;align-items:baseline;border-bottom:2px solid rgba(10,10,11,.22);padding-bottom:10px}.archipelago-card h2{margin:0;font:800 16px/1 "JetBrains Mono",ui-monospace,monospace;letter-spacing:.1em}.archipelago-card-kicker{font:800 9px/1 "JetBrains Mono",ui-monospace,monospace;letter-spacing:.16em;opacity:.72}.archipelago-card p{font-size:13px;line-height:1.5;margin:10px 0 0}.map-detail-section{margin:12px 0 0}.map-detail-section h3{margin:0 0 6px;font:800 10px/1.2 "JetBrains Mono",ui-monospace,monospace;letter-spacing:.14em}.map-detail-section ul{margin:0;padding-left:18px;font-size:12px;line-height:1.52}.map-detail-section a,.map-detail-section button{color:${PALETTE.ink};font-weight:800}.archipelago-action{display:inline-flex;align-items:center;justify-content:center;margin-top:13px;padding:9px 11px;border:2px solid ${PALETTE.ink};border-radius:7px;background:${PALETTE.blueSepia};color:${PALETTE.ink};font:800 10px/1 "JetBrains Mono",ui-monospace,monospace;letter-spacing:.11em;text-decoration:none;cursor:pointer}.archipelago-action:hover{background:${PALETTE.ink};color:${PALETTE.paper}}.archipelago-hud{position:absolute;z-index:4;left:clamp(12px,2.8vw,44px);bottom:clamp(12px,2.8vw,38px);max-width:min(525px,calc(100vw - 24px));font:800 10px/1.35 "JetBrains Mono",ui-monospace,monospace;letter-spacing:.06em}.archipelago-hud span{display:inline-block;padding:8px 10px;border:2px solid ${PALETTE.ink};background:rgba(232,224,200,.94);border-radius:8px}.archipelago-compass{position:absolute;right:clamp(14px,2.8vw,44px);top:clamp(14px,2.8vw,38px);z-index:4;width:70px;height:70px;border:2px solid ${PALETTE.ink};border-radius:50%;display:grid;place-items:center;background:rgba(232,224,200,.78);font:800 11px/1 "JetBrains Mono",ui-monospace,monospace}.archipelago-compass:before{content:"";position:absolute;width:1px;height:48px;background:${PALETTE.ink}}.archipelago-compass:after{content:"";position:absolute;width:48px;height:1px;background:${PALETTE.ink}}.archipelago-compass b{z-index:1;background:${PALETTE.paper};padding:3px}.archipelago-global-home{position:absolute;z-index:6;right:clamp(14px,2.8vw,44px);top:clamp(94px,10vw,120px);border:2px solid ${PALETTE.ink};border-radius:999px;background:${PALETTE.paper};color:${PALETTE.ink};padding:8px 10px;font:800 9px/1 "JetBrains Mono",ui-monospace,monospace;letter-spacing:.1em;box-shadow:3px 3px 0 rgba(10,10,11,.22);cursor:pointer}.archipelago-global-home:hover,.archipelago-global-home:focus-visible{background:${PALETTE.blueSepia}}.archipelago-overlay{position:absolute;z-index:3;inset:0;pointer-events:none;background-image:radial-gradient(rgba(10,10,11,.32) .8px,transparent .8px);background-size:13px 13px;mix-blend-mode:multiply;opacity:.17}
+        .archipelago-touch-hint{display:none;position:absolute;z-index:4;left:12px;top:124px;padding:7px 9px;border:2px solid ${PALETTE.ink};border-radius:999px;background:rgba(232,224,200,.94);font:800 8px/1 "JetBrains Mono",ui-monospace,monospace;letter-spacing:.07em}.archipelago-card-header{flex-wrap:wrap}.archipelago-card-home{margin-left:auto;border:1.5px solid ${PALETTE.ink};border-radius:999px;background:${PALETTE.paper};color:${PALETTE.ink};padding:6px 8px;font:800 8px/1 "JetBrains Mono",ui-monospace,monospace;letter-spacing:.08em;white-space:nowrap;cursor:pointer}.archipelago-card-home:hover,.archipelago-card-home:focus-visible{background:${PALETTE.blueSepia}}
+        @media(max-width:1100px){.archipelago-hud{display:none}}
+        @media(max-width:720px){.archipelago-crest{top:13px}.archipelago-title{font-size:31px}.archipelago-subtitle{max-width:270px;font-size:11px}.archipelago-compass{width:47px;height:47px;font-size:8px}.archipelago-compass:before{height:31px}.archipelago-compass:after{width:31px}.archipelago-global-home{top:70px;right:12px;padding:7px 9px}.archipelago-card{left:10px;right:10px;bottom:10px;width:auto;max-height:42dvh;padding:12px}.archipelago-hud{display:none}.archipelago-touch-hint{display:block}.archipelago-label{font-size:22px}.archipelago-sub{font-size:13px}.archipelago-map{min-width:620px;transform:translateX(calc((100vw - 620px)/2));width:620px}.archipelago-root{background:${PALETTE.sea}}}
         @media(prefers-reduced-motion:reduce){.archipelago-player,.archipelago-marker.map-location-active .archipelago-plate,.archipelago-marker.map-location-active .archipelago-home-ring{animation:none}}
       `}</style>
       <div className="archipelago-overlay" />
-      <svg className="archipelago-map" viewBox={`0 0 ${WORLD.w} ${WORLD.h}`} preserveAspectRatio="xMidYMid slice" onClick={moveOnMap}>
+      <svg className="archipelago-map" viewBox={`0 0 ${WORLD.w} ${WORLD.h}`} preserveAspectRatio="xMidYMid slice" onPointerDown={beginTouch} onPointerMove={moveTouch} onPointerUp={endTouch} onPointerCancel={endTouch} onClick={moveOnMap}>
         <defs>
           <pattern id={`${id}-hatch`} width="28" height="28" patternUnits="userSpaceOnUse" patternTransform="rotate(45)"><line x1="0" y1="0" x2="0" y2="28" stroke={PALETTE.ink} strokeWidth="2" opacity=".16" /></pattern>
           <pattern id={`${id}-grain`} width="16" height="16" patternUnits="userSpaceOnUse"><circle cx="3" cy="4" r="1" fill={PALETTE.ink} opacity=".25" /><circle cx="12" cy="11" r=".7" fill={PALETTE.ink} opacity=".2" /></pattern>
@@ -171,18 +274,22 @@ export function InteractiveMap({ id, eyebrow, title, subtitle, locations, footer
         <rect width={WORLD.w} height={WORLD.h} fill={`url(#${id}-grain)`} opacity=".25" />
         <text x="1200" y="144" textAnchor="middle" fill={PALETTE.ink} fontFamily="JetBrains Mono,ui-monospace,monospace" fontWeight="800" fontSize="22" letterSpacing="10">ESPRIT ARCHIPELAGO / {id.toUpperCase()}</text>
         {locations.map(item => <Marker key={item.id} item={item} active={active?.id === item.id} onActivate={activate} onFocus={focusItem} />)}
-        <g className="archipelago-player" transform={`translate(${player.x} ${player.y})`} pointerEvents="none">
-          <ellipse cx="0" cy="31" rx="19" ry="7" fill="rgba(10,10,11,.22)" stroke="none" /><path d="M-9 4-13 30M9 4 13 30M-10-5-24 8M10-5 24 8" fill="none" strokeWidth="7" /><path d="M-16-10Q0-23 16-10L12 12Q0 18-12 12Z" fill={PALETTE.blueSepia} strokeWidth="4" /><circle cx="0" cy="-31" r="15" fill={PALETTE.paper} strokeWidth="4" /><path d="M-17-35Q0-51 17-35L12-28H-12Z" fill={PALETTE.ink} stroke="none" />
+        <g transform={`translate(${player.x} ${player.y})`} pointerEvents="none">
+          <g className="archipelago-player">
+            <FieldAvatar avatar={avatar} />
+            <text x="0" y="55" textAnchor="middle" fill={PALETTE.ink} stroke="none" fontFamily="JetBrains Mono,ui-monospace,monospace" fontWeight="800" fontSize="11" letterSpacing="2">{avatar.callSign || 'VISITOR'}</text>
+          </g>
         </g>
       </svg>
       <div className="archipelago-crest"><div className="archipelago-eyebrow">{eyebrow}</div><h1 className="archipelago-title">{title}</h1><p className="archipelago-subtitle">{subtitle}</p></div>
       <div className="archipelago-compass" aria-hidden="true"><b>N</b></div>
+      <div className="archipelago-touch-hint">SWIPE + HOLD TO WALK · TAP TO ROUTE</div>
       <aside className="archipelago-card" aria-live="polite">
-        <div className="archipelago-card-header"><div><div className="archipelago-card-kicker">MAP REGION</div><h2>{active?.label}</h2></div><span className="archipelago-card-kicker">{active?.sub}</span></div>
+        <div className="archipelago-card-header"><div><div className="archipelago-card-kicker">MAP REGION</div><h2>{active?.label}</h2></div><span className="archipelago-card-kicker">{active?.sub}</span><button type="button" className="archipelago-card-home" onClick={() => navigate('/')} aria-label="Return to home map">⌂ HOME</button></div>
         <p>{active?.lore}</p>
-        {active?.detail}
-        {active?.to && <button className="archipelago-action" type="button" onClick={() => navigate(active.to)}>{active.home ? '← RETURN TO ARCHIPELAGO' : `OPEN ${active.label} →`}</button>}
-        {active?.action && <button className="archipelago-action" type="button" onClick={active.action}>{active.actionLabel ?? 'RUN EXPERIMENT →'}</button>}
+        {canInteract ? active?.detail : <p><strong>OUT OF RANGE.</strong> Move your avatar into this station’s signal ring to interact.</p>}
+        {canInteract && active?.to && <button className="archipelago-action" type="button" onClick={() => navigate(active.to)}>{active.home ? '← RETURN TO ARCHIPELAGO' : `OPEN ${active.label} →`}</button>}
+        {canInteract && active?.action && <button className="archipelago-action" type="button" onClick={active.action}>{active.actionLabel ?? 'RUN EXPERIMENT →'}</button>}
       </aside>
       <div className="archipelago-hud"><span>WASD / ARROWS · WALK THE MAP · ENTER TO INSPECT · CLICK A REGION</span>{footer && <span style={{ marginTop: 7 }}>{footer}</span>}</div>
       {children}
